@@ -31,4 +31,5 @@ result: "pass | fail"
 fallback: "none | rollback | re_execute | h2 | h4"
 checked_by: ""
 checked_at: "ISO8601"
+brand_logo: "透明底无字logo.png"
 version: 1

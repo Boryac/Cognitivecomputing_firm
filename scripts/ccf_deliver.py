@@ -124,6 +124,7 @@ def make_delivery(artifact_type: str, run_id: str, ticket_id: str,
             "note": "",
         },
         "license_notice": "AGPL-3.0 — 见 LICENSE；来源与许可声明保留",
+        "brand_logo": "透明底无字logo.png",
         "delivered_at": None,
         "version": 1,
     }

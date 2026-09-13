@@ -1,7 +1,41 @@
 # Changelog
 
-All notable changes to Cognitivecomputing_firm (CCF) are documented in
+All notable changes to cognitivecomputing-firm (CCF) are documented in
 this file. Format follows Keep a Changelog conventions.
+
+## [1.4.0] - 2026-09-13
+
+品牌标识在包内多处登记：SKILL.md、manifest.yaml、README.md、PRD.md、
+references/brand.md、references/charter.md、assets 四份模板、CHANGELOG.md。
+
+### Added
+
+- `PRD.md`：产品需求规格，覆盖 references/scripts/evals 引用的全部章节号
+  （3.3、4、4.5、5、6.5、6.21–6.24、7.4、9.1、10、11、12、13、15、20.1、
+  21、23.3）与全部代码项（A-、R-、DD-、F-、SG-、SW-、U-、IP-、E-、LS-、
+  PERM-、CT-、RUN-、GR-、P-、D-、L-）。
+- `references/brand.md`：名称释义、品牌定位、专业性宪章（PF-1..PF-4）、
+  标识使用规范（LG-1..LG-6）与标识覆盖清单（11 处）。
+- `references/runbook.md`：执行层接线手册，把 BOOTSTRAP/TURN/TERMINATE
+  映射到 11 个脚本的具体命令与 `run_state/` 状态文件读写顺序。
+- `platform/`：平台适配层——Claude Code（`.claude/commands/ccf.md`）、
+  WorkBuddy（`workbuddy.md` + SessionStart hook）、Codex（`codex.md`），
+  以及 `ccf_sessionstart.py` 首轮提示 hook。
+- 真实协同调用：`skill_orchestrator.py` 与 `integration_probe.py` 支持
+  子进程真实执行（`--invoke-cmd`）或 outbox 回执派发，不再伪造成功。
+
+### Changed
+
+- 技能标识与目录更名为 `cognitivecomputing-firm`，符合 Agent Skills 规范
+  （name 仅小写字母/数字/连字符，须匹配目录名）。
+- `SKILL.md` frontmatter 重写：description 改为触发短语（含 Use when 语义），
+  补 version / compatibility / allowed-tools / metadata；正文新增「Runtime 脚本
+  接线协议」与公司概览章节。
+- `manifest.yaml`：name 同步、version 1.4.0、brand 增加 etymology 与 coverage、
+  新增 platform 段、integration/ecosystem 标注 real_call。
+- README 全量重写：品牌页眉、平台技能目录表、平台适配说明、目录结构与文档索引。
+- `.gitignore` 与 `references/persistence.md` 状态目录命名对齐为 `run_state/`。
+- 版本号统一为 1.4.0（manifest / README / PRD / CHANGELOG）。
 
 ## [1.3.2] - 2026-09-13
 

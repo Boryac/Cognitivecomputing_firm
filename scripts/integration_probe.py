@@ -1,9 +1,13 @@
 # CCF grill-me 联动探测与记录：探测、决策状态机、调用记录（PRD 5.2）。
 # 写 state/integration.json（结构 per assets/integration.template.yaml）。
-"""CCF grill-me 联动：探测、安装提示、调用记录与失败降级。
+"""CCF grill-me 联动：探测、安装提示、真实调用与失败降级。
 
 决策状态机：installed / declined / later / install_pending /
 install_failed / unconfirmed / disabled；连续 3 次失败自动停用（PRD F-5）。
+
+真实调用（PRD 5.2.4）：提供 --invoke-cmd 时以子进程真实执行 grill-me 并取回结果；
+否则把调用信封写入 run_state/state/outbox.jsonl，交宿主编排层通过原生 Skill 工具
+执行后回执。不再伪造 "ok"。
 许可：AGPL-3.0
 """
 from __future__ import annotations
@@ -12,10 +16,12 @@ import argparse
 import json
 import os
 import re
+import shlex
+import subprocess
 import sys
 
-from ccf_state import (append_event, format_id, load_template, now_iso,
-                       read_json_file, resolve_root, state_file_path,
+from ccf_state import (append_event, ensure_dir, format_id, load_template,
+                       now_iso, read_json_file, resolve_root, state_file_path,
                        write_json_file)
 
 INSTALL_COMMAND = "npx skills add mattpocock/skills/grill-me"
@@ -188,6 +194,82 @@ def apply_install_reply(root: str | None, reply: str, skills: list | None = None
     return data
 
 
+def _invoke_real(root: str | None, envelope: dict, invoke_cmd=None,
+                 timeout: int = 30) -> tuple:
+    """真实调用 grill-me；返回 (result, detail)。result ∈ {ok, failed, dispatched}。
+
+    - invoke_cmd 提供时：子进程真实执行（shell=False），按返回码判定；
+    - 未提供时：写入 outbox.jsonl，交宿主回执（dispatched）。
+    """
+    if invoke_cmd:
+        argv = shlex.split(invoke_cmd) if isinstance(invoke_cmd, str) else list(invoke_cmd)
+        try:
+            proc = subprocess.run(argv, shell=False, capture_output=True, text=True,
+                                  timeout=timeout)
+            out = (proc.stdout or "").strip()
+            err = (proc.stderr or "").strip()
+            ok = proc.returncode == 0
+            return ("ok" if ok else "failed",
+                    "rc=%d; out=%s; err=%s" % (proc.returncode, out[:800], err[:400]))
+        except subprocess.TimeoutExpired:
+            return ("failed", "timeout %ss" % timeout)
+        except (OSError, ValueError) as exc:
+            return ("failed", "invoke error: %s" % exc)
+    outbox = state_file_path(root, "outbox.jsonl")
+    ensure_dir(os.path.dirname(outbox))
+    with open(outbox, "a", encoding="utf-8") as fh:
+        fh.write(json.dumps({"envelope": envelope, "status": "dispatched",
+                             "created_at": now_iso()}, ensure_ascii=False) + "\n")
+    return ("dispatched", "awaiting host dispatch via native Skill tool")
+
+
+def invoke(root: str | None, ticket_id: str, artifact_id: str,
+           input_text: str = "", acceptance: list | None = None,
+           invoke_cmd: str | None = None) -> dict:
+    """发起一次真实的 grill-me 调用并记录结果；未安装则报错。"""
+    data = load_integration(root)
+    entry = data[TARGET]
+    if not entry.get("installed"):
+        raise ValueError("grill-me 未安装，无法调用")
+    envelope = {
+        "protocol": "CCF::INTEGRATION_CALL",
+        "target": TARGET,
+        "run_id": entry.get("run_id", ""),
+        "ticket_id": ticket_id,
+        "artifact_id": artifact_id,
+        "input": input_text,
+        "acceptance": acceptance or [],
+        "expected_output": "findings",
+        "timestamp": now_iso(),
+    }
+    result, detail = _invoke_real(root, envelope, invoke_cmd)
+    call_id = format_id("IG", len(entry.get("calls", [])) + 1, 4)
+    call = {
+        "call_id": call_id,
+        "ticket_id": ticket_id,
+        "artifact_id": artifact_id,
+        "timestamp": now_iso(),
+        "result": result,
+        "detail": detail,
+        "findings_ref": "",
+    }
+    entry.setdefault("calls", []).append(call)
+    ev = append_event(root, "INTEGRATION_CALL_%s" % result.upper(),
+                      {"call_id": call_id, "detail": detail})
+    call["findings_ref"] = "events/events.jsonl#%s" % ev["event_id"]
+    streak = entry.get("failed_streak", 0)
+    if result == "failed":
+        streak += 1
+        if streak >= 3:
+            entry["decision"] = "disabled"
+            append_event(root, "INTEGRATION_DISABLED", {"reason": "连续 3 次失败"})
+    else:
+        streak = 0
+    entry["failed_streak"] = streak
+    save_integration(root, data)
+    return {"call": call, "result": result, "detail": detail}
+
+
 def record_call(root: str | None, ticket_id: str, artifact_id: str, result: str,
                 findings_event_id: str | None = None) -> dict:
     """记录一次联动调用；结果 ok/failed，连续失败统计。"""
@@ -240,10 +322,14 @@ def build_parser():
     pd.add_argument("--choice", choices=("install", "decline", "later"), required=True)
     pr = sub.add_parser("install-reply", help="处理安装命令执行回复")
     pr.add_argument("--reply", choices=("done", "failed", "skip"), required=True)
-    pc = sub.add_parser("call", help="记录联动调用")
+    pc = sub.add_parser("call", help="发起真实联动调用（或 --result 强制结果）")
     pc.add_argument("--ticket-id", required=True)
     pc.add_argument("--artifact-id", required=True)
-    pc.add_argument("--result", choices=("ok", "failed"), required=True)
+    pc.add_argument("--input", default="")
+    pc.add_argument("--invoke-cmd", default=None,
+                    help="真实调用命令模板；缺省则走 outbox 派发")
+    pc.add_argument("--result", choices=("ok", "failed"), default=None,
+                    help="强制指定结果（仅用于 eval）")
     pc.add_argument("--findings-event", default=None)
     sub.add_parser("disable", help="关闭联动")
     sub.add_parser("status", help="查看联动状态")
@@ -271,9 +357,15 @@ def main(argv=None) -> int:
             report = {"report": "integration-install-reply", "reply": args.reply,
                       "data": apply_install_reply(args.state_dir, args.reply, _load_skills(args))}
         elif args.command == "call":
-            report = {"report": "integration-call", "data": record_call(
-                args.state_dir, args.ticket_id, args.artifact_id, args.result,
-                args.findings_event)}
+            if args.result:
+                report = {"report": "integration-call",
+                          "data": record_call(args.state_dir, args.ticket_id,
+                                              args.artifact_id, args.result,
+                                              args.findings_event)}
+            else:
+                report = {"report": "integration-call",
+                          **invoke(args.state_dir, args.ticket_id, args.artifact_id,
+                                   args.input, None, args.invoke_cmd)}
         elif args.command == "disable":
             report = {"report": "integration-disable", "data": disable(args.state_dir)}
         else:

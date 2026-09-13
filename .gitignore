@@ -1,7 +1,6 @@
 # 运行时产物（不进入版本库）
+# 全部状态文件位于 run_state/ 之下：state/、events/、checkpoints/
 run_state/
-events/
-checkpoints/
 *.log
 
 # Python 缓存

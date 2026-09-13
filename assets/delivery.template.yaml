@@ -26,5 +26,6 @@ format_conversion:
   note: ""
 
 license_notice: "AGPL-3.0 — 见 LICENSE；来源与许可声明保留"
+brand_logo: "透明底无字logo.png"
 delivered_at: "ISO8601 | null"
 version: 1

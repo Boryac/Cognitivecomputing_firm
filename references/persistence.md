@@ -8,17 +8,22 @@
 
 ## 1. 文件
 
+全部状态文件位于 `run_state/` 之下（默认 `<skill_root>/run_state`）：
+
 | 文件 | 用途 |
 | --- | --- |
-| state/run.json | 当前状态 |
-| events/events.jsonl | 事件日志（append-only） |
-| checkpoints/ | 恢复点 |
-| state/integration.json | grill-me 联动状态 |
-| state/ecosystem.json | Skill 生态与协同状态 |
-| state/profile.json | 用户画像与学习数据 |
-| state/activation.json | 激活状态 |
-| state/individuals.json | 个人分配与产出索引 |
-| state/differential.json | 寻差发现索引 |
+| run_state/state/run.json | 当前状态 |
+| run_state/events/events.jsonl | 事件日志（append-only） |
+| run_state/checkpoints/ | 恢复点 |
+| run_state/state/integration.json | grill-me 联动状态 |
+| run_state/state/ecosystem.json | Skill 生态与协同状态 |
+| run_state/state/profile.json | 用户画像与学习数据 |
+| run_state/state/activation.json | 激活状态 |
+| run_state/state/individuals.json | 个人分配与产出索引 |
+| run_state/state/differential.json | 寻差发现索引 |
+| run_state/state/outbox.jsonl | 协同调用派发队列（宿主回执） |
+
+> 目录取值见 `scripts/ccf_state.py` 的 `DEFAULT_STATE_DIR`；脚本调用清单见 `references/runbook.md`。
 
 ## 2. run.json 结构
 

@@ -1,18 +1,33 @@
-name: Cognitivecomputing_firm
-version: 1.3.1
-description: CCF. Persistent company-simulation skill. Auto-prompts on first turn. Multi-skill ecosystem. Self-adapting.
+name: cognitivecomputing-firm
+version: 1.4.0
+description: CCF. 弈策集团公司化多角色工作流引擎。会话内持续、工单驱动、门禁交付、风格统一、可审计可回滚。
 author: Yestest Holdings Limited
 license: AGPL-3.0
 license_url: https://www.gnu.org/licenses/agpl-3.0.html
 source_code: https://github.com/Boryac/Cognitivecomputing_firm.git
 entry: SKILL.md
+spec: PRD.md
 
 brand:
   name: 弈策集团
+  display_name: 弈策集团
   legal_name: Yestest Holdings Limited
   tagline: ""
   logo: 透明底无字logo.png
   logo_use: "文档封面与交付物页眉；无字标识，不附加标语或署名"
+  etymology: "弈=全局推演；策=先定后动；Yestest=Yes+Test 先验后认；Holdings Limited=集团化有限追责"
+  coverage:
+    - SKILL.md
+    - manifest.yaml
+    - README.md
+    - PRD.md
+    - references/brand.md
+    - references/charter.md
+    - assets/run.template.json
+    - assets/artifact.template.yaml
+    - assets/delivery.template.yaml
+    - assets/gate-report.template.yaml
+    - CHANGELOG.md
 
 activation:
   mode: first_turn_prompt
@@ -24,7 +39,12 @@ activation:
     - /ccf start
     - /yestest start
     - 调用弈策集团
-    - 调用 Cognitivecomputing_firm
+    - 调用 cognitivecomputing-firm
+    - 调用 CCF
+  platform_realization:
+    claude_code: ".claude/commands/ccf.md + SessionStart hook"
+    workbuddy: "platform/workbuddy.md (SessionStart hook + .codebuddy command)"
+    codex: "platform/codex.md (AGENTS.md)"
 
 stop:
   - /ccf stop
@@ -61,6 +81,8 @@ ecosystem:
   compatibility_check: true
   call_timeout: 30s
   max_concurrent: 3
+  real_call: true
+  dispatch: outbox_inbox
   blacklist: []
   whitelist: []
 
@@ -77,6 +99,7 @@ integrations:
     on_install_done: reprobe_once
     on_decline: log_and_continue
     on_failure: log_and_continue
+    real_call: true
     disable_command: /ccf integration off grill-me
 
 delivery:
@@ -144,6 +167,8 @@ license_files:
   - CHANGELOG.md
 
 references:
+  - references/brand.md
+  - references/runbook.md
   - references/charter.md
   - references/org.md
   - references/roles.md
@@ -174,6 +199,14 @@ scripts:
   - scripts/ccf_deliver.py
   - scripts/ccf_adapt.py
   - scripts/individual_router.py
+
+platform:
+  - platform/README.md
+  - platform/workbuddy.md
+  - platform/codex.md
+  - platform/workbuddy-ccf-command.md
+  - platform/ccf_sessionstart.py
+  - .claude/commands/ccf.md
 
 assets:
   - assets/run.template.json
