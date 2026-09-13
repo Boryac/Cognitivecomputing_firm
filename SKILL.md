@@ -9,7 +9,7 @@ metadata:
   display_name: 弈策集团
   legal_name: Yestest Holdings Limited
   brand_logo: 透明底无字logo.png
-  source_code: https://github.com/Boryac/Cognitivecomputing_firm.git
+  source_code: https://github.com/Boryac/cognitivecomputing-firm.git
   spec: PRD.md
 ---
 

@@ -4,7 +4,7 @@ description: CCF. 弈策集团公司化多角色工作流引擎。会话内持�
 author: Yestest Holdings Limited
 license: AGPL-3.0
 license_url: https://www.gnu.org/licenses/agpl-3.0.html
-source_code: https://github.com/Boryac/Cognitivecomputing_firm.git
+source_code: https://github.com/Boryac/cognitivecomputing-firm.git
 entry: SKILL.md
 spec: PRD.md
 

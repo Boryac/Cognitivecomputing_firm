@@ -35,7 +35,7 @@
 **方式 A：Git Clone**（推荐）
 
 ```bash
-git clone https://github.com/Boryac/Cognitivecomputing_firm.git
+git clone https://github.com/Boryac/cognitivecomputing-firm.git
 ```
 
 **方式 B：下载 ZIP**：仓库页面 `Code → Download ZIP`，解压得到 `cognitivecomputing-firm/`。

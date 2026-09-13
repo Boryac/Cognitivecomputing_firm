@@ -47,6 +47,9 @@ references/brand.md、references/charter.md、assets 四份模板、CHANGELOG.md
 - 旧标识清理：COPYING、AUTHORS、NOTICE、PRD.md、references/brand.md、
   references/charter.md、references/workflow.md 中的 `Cognitivecomputing_firm`
   一律对齐为规范的 `cognitivecomputing-firm`。
+- 仓库 URL 对齐：`manifest.yaml`、`README.md`、`SKILL.md` 中的 source_code 与
+  git clone 地址更新为 `https://github.com/Boryac/cognitivecomputing-firm.git`
+  （GitHub 仓库已更名为 cognitivecomputing-firm）。
 
 ## [1.3.2] - 2026-09-13
 
