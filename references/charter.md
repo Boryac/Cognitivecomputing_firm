@@ -8,7 +8,7 @@
 
 ## 1. 宪章
 
-CCF（Cognitivecomputing_firm）是一个 Skill，内部设定公司为弈策集团（Yestest Holdings Limited）。
+CCF（cognitivecomputing-firm）是一个 Skill，内部设定公司为弈策集团（Yestest Holdings Limited）。
 安装后，Skill 在会话第一轮主动调用，向用户发起激活请求；用户确认后，Skill 在当前会话内持续驻留，
 将每次用户输入登记为工单，按预设职能、角色、个人、流程、门禁、风格法执行任务。
 

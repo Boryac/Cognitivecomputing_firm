@@ -521,7 +521,7 @@ A-1 第一轮激活请求；A-2 请求仅一次；A-3 activate 进入 BOOTSTRAP�
 
 | 术语 | 定义 |
 | --- | --- |
-| CCF | Cognitivecomputing_firm，本技能 |
+| CCF | cognitivecomputing-firm，本技能 |
 | 弈策集团 / Yestest Holdings Limited | 内部公司设定，组织载体 |
 | Ticket | 由用户输入登记的工作单 |
 | MicroTask | 单目标单产物单责任单验收的最小执行单元 |

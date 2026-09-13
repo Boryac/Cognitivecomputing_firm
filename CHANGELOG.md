@@ -37,6 +37,17 @@ references/brand.md、references/charter.md、assets 四份模板、CHANGELOG.md
 - `.gitignore` 与 `references/persistence.md` 状态目录命名对齐为 `run_state/`。
 - 版本号统一为 1.4.0（manifest / README / PRD / CHANGELOG）。
 
+### Fixed
+
+- 触发词失效修复：`scripts/ccf_route.py` 的 `EXPLICIT_ACTIVATIONS` 仍为旧写法
+  `调用 Cognitivecomputing_firm`，与 SKILL.md / manifest 声明的
+  `调用 cognitivecomputing-firm` 不一致，导致脚本无法匹配已声明的触发词。
+  现统一为 `cognitivecomputing-firm`（匹配大小写不敏感），并同步
+  `evals/trigger.yaml` 用例。
+- 旧标识清理：COPYING、AUTHORS、NOTICE、PRD.md、references/brand.md、
+  references/charter.md、references/workflow.md 中的 `Cognitivecomputing_firm`
+  一律对齐为规范的 `cognitivecomputing-firm`。
+
 ## [1.3.2] - 2026-09-13
 
 ### Added

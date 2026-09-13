@@ -22,7 +22,7 @@ CCF 在会话第一轮主动调用，无需用户显式命令。调用流程：
 
 ```
 YESTEST // ACTIVATION // REQUEST
-弈策集团（Cognitivecomputing_firm）可激活。
+弈策集团（cognitivecomputing-firm）可激活。
 激活后本会话持续运行，将每次输入作为工单处理，
 按固定职能、角色、个人、流程、门禁、风格法执行。
 许可：AGPL-3.0
@@ -71,7 +71,7 @@ YESTEST // ACTIVATION // DECLINED
 /ccf start
 /yestest start
 调用弈策集团
-调用 Cognitivecomputing_firm
+调用 cognitivecomputing-firm
 调用 CCF
 ```
 

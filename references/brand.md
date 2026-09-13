@@ -13,7 +13,7 @@
 | 对外品牌 | 弈策集团 |
 | 法定名称 | Yestest Holdings Limited |
 | 技能标识 | cognitivecomputing-firm |
-| 组织载体 | CCF（Cognitivecomputing_firm）内部公司设定 |
+| 组织载体 | CCF（cognitivecomputing-firm）内部公司设定 |
 | 成立隐喻 | 弈（全局推演）· 策（先定后动）· Yestest（先验后认） |
 
 ## 2. 名称释义

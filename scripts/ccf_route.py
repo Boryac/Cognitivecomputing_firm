@@ -32,7 +32,7 @@ EXPLICIT_ACTIVATIONS = (
     "/ccf start",
     "/yestest start",
     "调用弈策集团",
-    "调用 Cognitivecomputing_firm",
+    "调用 cognitivecomputing-firm",
     "调用 CCF",
 )
 TERMINATE_COMMANDS = ("/ccf stop", "/yestest stop")
@@ -40,7 +40,7 @@ KNOWN_PREFIXES = ("/ccf ", "/yestest ")
 
 ACTIVATION_REQUEST_TEXT = (
     "YESTEST // ACTIVATION // REQUEST\n"
-    "弈策集团（Cognitivecomputing_firm）可激活。\n"
+    "弈策集团（cognitivecomputing-firm）可激活。\n"
     "激活后本会话持续运行，将每次输入作为工单处理，\n"
     "按固定职能、角色、个人、流程、门禁、风格法执行。\n"
     "许可：AGPL-3.0\n"

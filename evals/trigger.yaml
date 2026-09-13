@@ -100,7 +100,7 @@ cases:
     preconditions:
       - CCF 已安装且可用
     steps:
-      - 依次输入 /yestest start、调用弈策集团、调用 Cognitivecomputing_firm
+      - 依次输入 /yestest start、调用弈策集团、调用 cognitivecomputing-firm
       - 分别观察输出
     expected:
       - 每个入口均跳过激活请求，直接进入 CCF::BOOTSTRAP
