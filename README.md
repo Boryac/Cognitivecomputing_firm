@@ -41,10 +41,10 @@ git clone https://github.com/Boryac/Cognitivecomputing_firm.git
 
 ### 放置到 Skill 目录
 
-将整个 `Cognitivecomputing_firm/` 文件夹复制到当前计算机的 Skill 根目录：
+将整个 `Cognitivecomputing_firm/` 文件夹复制到宿主平台的 Skill 根目录（即放置后 `SKILL.md` 可直接被识别为 Skill 入口的目录）：
 
 ```
-%USERPROFILE%\.meituan-catpaw\<user_id>\skills\
+<Skill 根目录>/Cognitivecomputing_firm/
 ```
 
 放置完成后，该目录下应直接存在 `SKILL.md`、`manifest.yaml`、`references/`、`scripts/`、`assets/`、`evals/`。
@@ -57,19 +57,9 @@ git clone https://github.com/Boryac/Cognitivecomputing_firm.git
 python -m py_compile *.py && echo OK
 ```
 
-### 在 CatPaw 中启动
+### 启动 / 新建会话
 
-新建会话，首轮将收到如下格式的激活请求：
-
-```
-YESTEST // ACTIVATION // REQUEST
-弈策集团（Cognitivecomputing_firm）可激活。
-回复：
-  activate  — 激活
-  decline   — 不激活
-```
-
-回复 `activate` 后即进入 CCF 协议，每次输入都按工单处理。
+新建会话，首轮将收到该 Skill 的激活请求，按提示回复确认即可进入协议，此后每次输入都将作为工单按固定职能、门禁与风格法执行。
 
 ### 常用命令
 
