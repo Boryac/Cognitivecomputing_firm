@@ -3,6 +3,18 @@
 All notable changes to Cognitivecomputing_firm (CCF) are documented in
 this file. Format follows Keep a Changelog conventions.
 
+## [1.3.2] - 2026-09-13
+
+### Added
+
+- README 新增"首次使用（从 GitHub 到本地运行）"章节：Python 与 Git
+  前置依赖、Git Clone 与 ZIP 两种拉取方式、Skill 目录放置、脚本编译
+  验证、激活流程示例、常用命令表、后续更新方式。
+
+### Changed
+
+- README V1.3.1。
+
 ## [1.3.1] - 2026-09-13
 
 ### Added

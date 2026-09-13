@@ -16,13 +16,84 @@ CCF（Cognitivecomputing_firm）是一款驻留式公司运作 Skill：激活后
 - 交付路由：按产物类型自动匹配交付管线（文档默认 PDF，Word 需显式请求）。
 - 许可合规：AGPL-3.0 分发，来源与许可声明全程保留。
 
-## 快速开始
+## 首次使用（从 GitHub 到本地运行）
 
-1. 将本仓库完整复制到 Skill 目录。
-2. 新会话首轮将收到激活请求：回复 `activate` 激活，或 `decline` 拒绝。
-3. 激活后每次输入即一工单，按 CCF 协议执行；`/ccf stop` 终止并生成本轮结束审计包。
+### 前置依赖
 
-显式激活命令：`/ccf start`、`/yestest start`、`调用弈策集团`。
+| 依赖 | 用途 | 要求 |
+| --- | --- | --- |
+| Python 3.10+ | 运行 `scripts/` 下状态/门禁/风格/协同/适配等 11 个脚本 | 命令行可输入 `python` 即可 |
+| Git | 拉取与后续更新 | 可选，ZIP 方式无需安装 |
+
+### 拉取到本地
+
+任选其一：
+
+**方式 A：Git Clone**（推荐，方便后续更新）
+
+```bash
+git clone https://github.com/Boryac/Cognitivecomputing_firm.git
+```
+
+**方式 B：下载 ZIP**（无需 Git）
+
+在仓库页面点击 `Code → Download ZIP`，解压后得到 `Cognitivecomputing_firm/` 文件夹。
+
+### 放置到 Skill 目录
+
+将整个 `Cognitivecomputing_firm/` 文件夹复制到当前计算机的 Skill 根目录：
+
+```
+%USERPROFILE%\.meituan-catpaw\<user_id>\skills\
+```
+
+放置完成后，该目录下应直接存在 `SKILL.md`、`manifest.yaml`、`references/`、`scripts/`、`assets/`、`evals/`。
+
+### 验证可运行性
+
+进入 `scripts/` 目录，确认脚本可解析：
+
+```bash
+python -m py_compile *.py && echo OK
+```
+
+### 在 CatPaw 中启动
+
+新建会话，首轮将收到如下格式的激活请求：
+
+```
+YESTEST // ACTIVATION // REQUEST
+弈策集团（Cognitivecomputing_firm）可激活。
+回复：
+  activate  — 激活
+  decline   — 不激活
+```
+
+回复 `activate` 后即进入 CCF 协议，每次输入都按工单处理。
+
+### 常用命令
+
+| 场景 | 命令 |
+| --- | --- |
+| 显式激活 | `/ccf start` / `/yestest start` / `调用弈策集团` |
+| 切换亮色主题 | `/ccf theme light` |
+| 切换暗色主题 | `/ccf theme dark` |
+| 查看已安装协同 Skill | `/ccf skills list` |
+| 查看当前用户画像 | `/ccf profile` |
+| 终止并生成审计包 | `/ccf stop` |
+
+### 后续更新
+
+已用 Git Clone 拉取时：
+
+```bash
+cd Cognitivecomputing_firm
+git pull
+```
+
+已用 ZIP 安装时：重新下载 ZIP 并整体替换 `Cognitivecomputing_firm/` 文件夹即可。
+
+> 注意：`run_state/`、`events/`、`checkpoints/` 为首次运行后生成的会话产物（已在 `.gitignore` 中忽略），更新时不会被覆盖。
 
 ## 目录结构
 
