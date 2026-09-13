@@ -1,0 +1,52 @@
+# Ticket template (assets/ticket.template.yaml)
+# 结构约定：Ticket 状态机见 PRD 7.2。
+# status 取值：
+#   received → triaged → scoped → planned → staffed → executing
+#   → reviewing → gated → integrated → delivered → learning → archived
+ticket_id: T-001
+run_id: CCF-YYYY-MM-DD-NNN
+intent: ""
+source: "user_input | command"
+status: received
+received_at: "ISO8601"
+updated_at: "ISO8601"
+
+# SCOPE 输出
+type: "document | spreadsheet | presentation | code | image | data | video_audio | app_service | mixed | other"
+scope:
+  objective: ""
+  deliverable_type: "document"
+  acceptance: []
+  risks: []
+  budget: {"tokens": 0, "tools": [], "time_minutes": 0}
+  theme: "light"
+
+# PLAN 输出
+plan:
+  wbs_ref: ""
+  dag_ref: ""
+  raci_ref: ""
+
+# STAFF / EXECUTE 输出
+staffing:
+  functions: []
+  individuals: []
+artifacts: []
+differential_findings: []
+
+# GATE 输出
+gates:
+  passed: []
+  failed: []
+
+# 交付
+delivery:
+  format: ""
+  status: "pending | confirmed | delivered | rejected | revised"
+  ref: ""
+
+decision_level: "D0 | D1 | D2 | D3 | D4"
+h_points: []
+owner: ""
+version: 1
+rollback_ref: ""

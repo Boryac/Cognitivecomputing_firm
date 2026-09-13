@@ -1,0 +1,156 @@
+eval_id: persistence-01
+title: 持久化与状态恢复测试
+target: scripts/ccf_state.py
+source: "PRD V1.3 章节：4.5、7.3、13、21（A-7、A-10、A-11、A-21）"
+cases:
+  - id: "persistence-01-01"
+    label: 情况 A 跨轮状态读写
+    scenario: 平台支持跨轮状态时，按阶段 3 写入、每轮读取、轮末写回执行。
+    preconditions:
+      - 平台能力为情况 A（支持跨轮状态）
+      - BOOTSTRAP 已进入阶段 3
+    steps:
+      - BOOTSTRAP 阶段 3 写入 state/run.json
+      - 新一轮开头读取 run.json
+      - 检查 active 字段为 true
+      - 执行 CCF::TURN
+      - 轮末写回 run.json
+    expected:
+      - run.json 在阶段 3 创建且结构合法
+      - active=true 时每轮进入 CCF::TURN
+      - 轮末 updated_at 更新，状态与轮内结果一致
+      - 恢复后继续按中断前的阶段执行
+    acceptance:
+      - "A-10"
+  - id: "persistence-01-02"
+    label: run.json 结构校验
+    scenario: run.json 字段完整性与取值规范。
+    preconditions:
+      - 已生成 state/run.json
+    steps:
+      - 读取 run.json 全字段
+    expected:
+      - 字段包含 run_id、active、phase、theme、style、license、contract、integration、ecosystem、learning、staffing、created_at、updated_at、hash
+      - run_id 形如 CCF-YYYY-MM-DD-NNN
+      - style 取值为 macos-vibrancy-light-v1
+      - license 取值为 AGPL-3.0
+      - hash 与内容匹配
+    acceptance:
+      - "A-10"
+  - id: "persistence-01-03"
+    label: hash 校验失败返回 STATE_DRIFT
+    scenario: run.json 内容被改动而未重算 hash 时，RESUME 应检测到漂移。
+    preconditions:
+      - 存在合法的 state/run.json
+    steps:
+      - 手动修改 run.json 内容（不重算 hash）
+      - 开始新一轮
+      - 观察 RESUME 步骤
+    expected:
+      - RESUME 步骤返回 CCF::STATE_DRIFT
+      - 执行停止，不进入后续 TURN 步骤
+    acceptance:
+      - "A-11"
+  - id: "persistence-01-04"
+    label: 漂移恢复流程
+    scenario: STATE_DRIFT 后按固定步骤恢复上下文并回到运行状态。
+    preconditions:
+      - 检测到 CCF::STATE_DRIFT
+      - 存在最近 checkpoint
+    steps:
+      - 执行漂移处理步骤
+    expected:
+      - 顺序执行为：停止执行、读最近检查点、校验 hash、校验契约、校验风格、恢复上下文、记录事件、恢复 RUNNING
+      - 恢复后契约与风格与 checkpoint 一致
+      - 事件日志记录漂移恢复事件
+    acceptance:
+      - "A-11"
+      - "A-19"
+  - id: "persistence-01-05"
+    label: checkpoint 写入触发
+    scenario: 关键状态变更时写入 checkpoint，周期性写入 heartbeat。
+    preconditions:
+      - CCF 已激活
+    steps:
+      - 依次触发激活状态变更、MicroTask 完成、Gate 通过、联动状态变更、协同池变更、个人分配变更、寻差发现变更、画像更新
+      - 检查 checkpoints 目录
+    expected:
+      - 每个触发点产生 checkpoint 写入
+      - 每 5 轮 TURN 写入 heartbeat 记录
+    acceptance:
+      - "A-19"
+  - id: "persistence-01-06"
+    label: checkpoint 恢复
+    scenario: run.json 缺失时读取最近 checkpoint 并完成恢复校验。
+    preconditions:
+      - checkpoints 目录存在最近 checkpoint
+    steps:
+      - 删除或缺失 state/run.json
+      - 开始新一轮
+    expected:
+      - 读取最近 checkpoint 作为恢复源
+      - 按顺序校验契约、风格、联动状态、协同状态、激活状态、个人分配、寻差发现、画像版本、许可声明
+      - 校验通过后恢复上下文并进入 RUNNING
+    acceptance:
+      - "A-10"
+      - "A-19"
+  - id: "persistence-01-07"
+    label: 事件 append-only
+    scenario: events.jsonl 只允许追加，不允许覆盖或修改已有事件。
+    preconditions:
+      - 已有 events/events.jsonl 且含历史事件行
+    steps:
+      - 发生新事件
+      - 检查事件文件写入方式
+    expected:
+      - 新事件以追加行写入，历史行保持不变
+      - 再次发生同类事件时新增独立行
+      - 不存在对已有事件行的原地修改
+    acceptance:
+      - "A-21"
+  - id: "persistence-01-08"
+    label: 情况 B 文件读写
+    scenario: 平台支持文件读写但不支持跨轮状态时，以文件与 checkpoint 维持持续。
+    preconditions:
+      - 平台能力为情况 B（支持文件读写，不支持状态）
+    steps:
+      - BOOTSTRAP 阶段 3 写文件
+      - 每轮开头读文件
+      - 文件不存在时读最近 checkpoint
+      - 轮末写文件与 checkpoint
+    expected:
+      - 轮末同时更新状态文件与 checkpoint
+      - 文件缺失时能从最近 checkpoint 恢复
+    acceptance:
+      - "A-7"
+      - "A-10"
+  - id: "persistence-01-09"
+    label: 情况 C 仅文本
+    scenario: 平台仅支持文本时，以状态块与隐藏恢复块维持持续。
+    preconditions:
+      - 平台能力为情况 C（仅文本）
+    steps:
+      - BOOTSTRAP 阶段 3 生成状态块
+      - 每轮末尾追加隐藏恢复块
+      - 下一轮开头解析恢复块
+    expected:
+      - 轮末输出包含隐藏恢复块
+      - 下一轮开头能解析出状态
+      - 解析失败时返回 BOOTSTRAP_FAILED
+    acceptance:
+      - "A-7"
+  - id: "persistence-01-10"
+    label: 情况 D 不支持持久化
+    scenario: 平台无法保证持续调用时，明确报告并给出可选方案。
+    preconditions:
+      - 平台能力为情况 D（不支持持久化）
+    steps:
+      - 执行 BOOTSTRAP
+      - 观察输出
+    expected:
+      - 返回 CCF::BOOTSTRAP_FAILED
+      - 输出注明原因：平台无法保证持续调用
+      - 列出可选方案 A（接入外部 checkpointer）与 B（使用 CCF-Lite 声明降级）
+    acceptance:
+      - "A-7"
+# YESTEST // persistence // V1.3 // G0

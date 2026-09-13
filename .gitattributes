@@ -1,0 +1,23 @@
+# 行尾规范：文本统一 LF
+* text=auto
+*.py text eol=lf
+*.md text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.json text eol=lf
+*.txt text eol=lf
+LICENSE text eol=lf
+COPYING text eol=lf
+NOTICE text eol=lf
+AUTHORS text eol=lf
+CHANGELOG.md text eol=lf
+SKILL.md text eol=lf
+manifest.yaml text eol=lf
+.gitignore text eol=lf
+.gitattributes text eol=lf
+
+# 二进制资源
+*.png binary
+
+# diff 优化
+*.py diff=python

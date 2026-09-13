@@ -1,0 +1,171 @@
+eval_id: delivery-01
+title: 交付路由与格式确认测试
+target: scripts/ccf_deliver.py
+source: "PRD V1.3 章节：7.4、14.4、20.2、21（A-42、A-54、A-55、A-56）"
+cases:
+  - id: "delivery-01-01"
+    label: 类型识别与路由
+    scenario: SCOPE 阶段标注产物类型，交付时按类型自动匹配管线。
+    preconditions:
+      - SCOPE 阶段已完成类型标注
+    steps:
+      - 按产物类型路由到对应交付管线
+    expected:
+      - 文档类默认 PDF，可选 MD、Word、LaTeX
+      - 表格类默认 Excel，可选 CSV、PDF
+      - 演示类默认 PDF，可选 PPTX、MD
+      - 代码类默认源码包，可选可执行文件
+      - 图片类默认 PNG，可选 SVG、JPG、PDF
+      - 数据类默认 JSON，可选 CSV、Excel
+      - 视频音频类默认源文件
+      - 应用服务类默认部署包
+      - 混合类默认压缩包
+    acceptance:
+      - "A-54"
+  - id: "delivery-01-02"
+    label: 文档默认 PDF
+    scenario: 文档类交付默认 PDF，Word 需显式请求。
+    preconditions:
+      - 交付物类型为文档类
+    steps:
+      - 执行文档交付管线
+    expected:
+      - 管线为 MD 源稿、用户确认、LaTeX 排版、PDF 交付
+      - 未显式请求时不输出 Word
+      - 仅用户显式请求 Word 时才生成
+    acceptance:
+      - "A-54"
+  - id: "delivery-01-03"
+    label: 交付确认格式
+    scenario: 文档交付前触发格式确认，不擅自输出 Word。
+    preconditions:
+      - 文档内容已通过全部门禁
+    steps:
+      - 进入交付确认节点
+      - 观察确认输出
+    expected:
+      - 输出 "YESTEST // DELIVERY // CONFIRM // DOC"
+      - 选项含 approve、approve+word、revise、reject
+      - 内容含建议（默认交付 PDF）、风险、影响说明
+      - 未确认前不输出任何交付格式
+    acceptance:
+      - "A-55"
+  - id: "delivery-01-04"
+    label: approve 输出 PDF
+    scenario: 确认 approve 后按 LaTeX 排版输出 PDF。
+    preconditions:
+      - 已输出交付确认
+    steps:
+      - 用户回复 approve
+      - 观察交付输出
+    expected:
+      - 执行 LaTeX 排版并输出 PDF
+      - 交付前经 G9 交付门最终校验
+    acceptance:
+      - "A-54"
+  - id: "delivery-01-05"
+    label: approve+word 同时交付
+    scenario: 确认 approve+word 后输出 PDF 与 Word 两种格式。
+    preconditions:
+      - 已输出交付确认
+    steps:
+      - 用户回复 approve+word
+      - 观察交付输出
+    expected:
+      - 输出 PDF 并同时转换生成 Word
+      - 两种格式均保留许可与来源声明
+    acceptance:
+      - "A-55"
+  - id: "delivery-01-06"
+    label: revise 回退修改
+    scenario: 用户选择 revise 时回退到 Specialist 环节修改。
+    preconditions:
+      - 已输出交付确认
+    steps:
+      - 用户回复 revise
+      - 观察流程走向
+    expected:
+      - 回退到 Specialist 环节修改内容
+      - 修改完成后重新走门禁与确认
+    acceptance:
+      - "A-55"
+  - id: "delivery-01-07"
+    label: reject 回退阶段
+    scenario: 用户选择 reject 时回退到 SCOPE 阶段。
+    preconditions:
+      - 已输出交付确认
+    steps:
+      - 用户回复 reject
+      - 观察流程走向
+    expected:
+      - 回退到 SCOPE 阶段重新定义需求
+      - 重新执行拆解与门禁流程
+    acceptance:
+      - "A-55"
+  - id: "delivery-01-08"
+    label: 转换失败回退默认格式
+    scenario: 格式转换失败时回退默认格式，不阻塞交付。
+    preconditions:
+      - 文档类交付确认已通过
+    steps:
+      - 使 LaTeX 或 Word 转换失败
+      - 观察交付结果
+    expected:
+      - 转换失败时回退到默认格式交付
+      - 主流程不阻塞
+      - 交付仍保留许可与来源声明
+    acceptance:
+      - "A-56"
+  - id: "delivery-01-09"
+    label: 保留许可与来源声明
+    scenario: 所有交付物保留版权与许可声明及来源标注。
+    preconditions:
+      - 交付物已生成
+    steps:
+      - 检查交付物中的许可与来源信息
+    expected:
+      - 保留版权声明与许可声明
+      - 保留来源标注
+      - 记录 LICENSE_DECLARED 事件
+    acceptance:
+      - "A-42"
+  - id: "delivery-01-10"
+    label: 类型歧义先询问
+    scenario: 交付物类型识别有歧义时先询问用户，不猜测。
+    preconditions:
+      - 产物类型识别存在歧义
+    steps:
+      - 触发交付路由
+      - 观察行为
+    expected:
+      - 不猜测类型，先向用户询问确认
+      - 确认后再路由到对应管线
+    acceptance:
+      - "A-54"
+  - id: "delivery-01-11"
+    label: 未指定格式按默认
+    scenario: 用户未明确指定格式时按该类型默认格式交付。
+    preconditions:
+      - 交付物类型已明确
+    steps:
+      - 不指定格式直接交付
+    expected:
+      - 按该类型默认格式输出交付物
+      - 无需额外确认步骤（文档类除外）
+    acceptance:
+      - "A-54"
+  - id: "delivery-01-12"
+    label: 协同转换优先
+    scenario: 格式转换类协同 Skill 优先于内置转换能力调用。
+    preconditions:
+      - 格式转换类协同 Skill 在协同池且可用
+    steps:
+      - 执行格式转换环节
+      - 观察转换方
+    expected:
+      - 优先调用格式转换类协同 Skill
+      - 协同不可用或缺席时回退内置转换能力
+      - 转换失败按默认格式回退
+    acceptance:
+      - "A-56"
+# YESTEST // delivery // V1.3 // G0

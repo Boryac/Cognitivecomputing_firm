@@ -1,0 +1,167 @@
+eval_id: style-01
+title: 风格法与样式合规测试
+target: scripts/style_lint.py
+source: "PRD V1.3 章节：11、21（A-16、A-17、A-23）"
+cases:
+  - id: "style-01-01"
+    label: 合规产物通过 G6
+    scenario: 使用亮色 token 构建的产物应通过 style_lint 与 G6 风格门。
+    preconditions:
+      - 产物按 macOS Vibrancy 亮色 token 构建
+    steps:
+      - 对产物运行 style_lint
+      - 执行 G6 风格门
+    expected:
+      - style_lint 报告零违规
+      - G6 通过，无否决意见
+    acceptance:
+      - "A-16"
+      - "A-23"
+  - id: "style-01-02"
+    label: 亮色默认
+    scenario: 未显式切换主题时，产物使用亮色主题。
+    preconditions:
+      - 未执行任何主题切换命令
+    steps:
+      - 构建产物
+      - 检查 run.json 主题字段
+    expected:
+      - run.json 中 theme 为 light
+      - style 为 macos-vibrancy-light-v1
+      - 产物色层使用 bg-[#e8e8ed]/80、bg-[#f5f5f7]、bg-white 亮色 token 体系
+    acceptance:
+      - "A-17"
+  - id: "style-01-03"
+    label: 暗色备选
+    scenario: 主题切换显式，暗色 token 可作为备选主题生效。
+    preconditions:
+      - CCF 已激活
+    steps:
+      - 用户输入 /ccf theme dark
+      - 构建产物并检查 token
+    expected:
+      - run.json 中 theme 变为 dark
+      - 色层切换为 bg-[#1c1c1e]/80、bg-[#2c2c2e]、bg-[#3a3a3c]
+      - 边框与文字切换为 border-white/8 与 text-white/95 体系
+      - 强调色仍为 #0a84ff，过渡仍为 transition-colors duration-200 ease-out
+    acceptance:
+      - "A-17"
+  - id: "style-01-04"
+    label: 禁止渐变
+    scenario: 产物出现渐变类时，style_lint 报告违规并导致 G6 否决。
+    preconditions:
+      - 产物含渐变样式
+    steps:
+      - 对产物运行 style_lint
+    expected:
+      - 检出 "^bg-gradient" 类时返回违规
+      - 违规编号为 F-1，替代建议为纯色
+      - G6 依据报告否决
+    acceptance:
+      - "A-16"
+      - "A-23"
+  - id: "style-01-05"
+    label: 禁止发光与超限阴影
+    scenario: 发光效果或阴影 spread 超过 2px 时判定违规。
+    preconditions:
+      - 产物含发光或阴影样式
+    steps:
+      - 对产物运行 style_lint
+    expected:
+      - 检出 "^shadow-(xl|2xl|lg)$" 类时返回违规
+      - 阴影 spread 大于 2px 时返回违规
+      - 违规编号为 F-2、F-3，替代为无效果或 1px 边框
+    acceptance:
+      - "A-23"
+  - id: "style-01-06"
+    label: 圆角上限
+    scenario: 圆角不得超过 rounded-xl，rounded-3xl 与 rounded-full 均为禁止。
+    preconditions:
+      - 产物含圆角样式
+    steps:
+      - 对产物运行 style_lint
+    expected:
+      - 检出 "^rounded-(3xl|full)$" 类时返回违规
+      - 违规编号为 F-5、F-6，替代为 rounded-lg 或 rounded-xl
+      - rounded-lg 至 rounded-xl 范围通过
+    acceptance:
+      - "A-23"
+  - id: "style-01-07"
+    label: 禁止装饰动画
+    scenario: 出现动画类时判定违规。
+    preconditions:
+      - 产物含动画样式
+    steps:
+      - 对产物运行 style_lint
+    expected:
+      - 检出 "^animate-" 类时返回违规
+      - 违规编号为 F-4，装饰动画被移除
+      - pulse、bounce、spin 均不可出现
+    acceptance:
+      - "A-23"
+  - id: "style-01-08"
+    label: 禁止彩色文字与强调色滥用
+    scenario: 彩色文字类禁止，强调色仅用于文字与焦点。
+    preconditions:
+      - 产物含彩色文字或强调色背景
+    steps:
+      - 对产物运行 style_lint
+    expected:
+      - 检出 "^text-(yellow|pink|green|purple)-[0-9]+$" 类时返回违规
+      - 强调色 #0a84ff 用作大面积背景时返回违规（编号 F-7）
+      - 强调色仅用于文字与焦点时通过
+    acceptance:
+      - "A-23"
+  - id: "style-01-09"
+    label: 必须模式检查
+    scenario: button、card、input 组件必须包含约定类。
+    preconditions:
+      - 产物含 button、card、input 组件
+    steps:
+      - 对产物运行 style_lint
+    expected:
+      - button 缺失 rounded-lg、transition-colors、duration-200 时返回违规
+      - card 缺失 border、rounded-xl 时返回违规
+      - input 缺失 rounded-lg、focus:border-、placeholder- 时返回违规
+    acceptance:
+      - "A-23"
+  - id: "style-01-10"
+    label: style_lint 报告结构
+    scenario: 报告应含违规编号、位置与替代建议，并可支撑否决。
+    preconditions:
+      - 产物存在违规
+    steps:
+      - 运行 style_lint 并读取报告
+    expected:
+      - 报告包含违规项编号（F-1 至 F-13）
+      - 报告包含违规位置与替代建议
+      - Style Warden Lead 依据报告行使一票否决
+    acceptance:
+      - "A-16"
+  - id: "style-01-11"
+    label: 风格漂移检测
+    scenario: 产物与既定风格 token 不一致视为漂移，停止、回滚、重做。
+    preconditions:
+      - 存在已认定的风格基准 token
+    steps:
+      - 检测产物与风格基准的一致性
+    expected:
+      - 检测到漂移时停止执行
+      - 回滚到漂移前状态并重做
+      - Style Warden 的 differential 个人负责漂移检测
+    acceptance:
+      - "A-23"
+  - id: "style-01-12"
+    label: 每轮 VERIFY 运行 style_lint
+    scenario: 每一轮 TURN 的 VERIFY 步骤都执行风格检查。
+    preconditions:
+      - CCF 已激活
+    steps:
+      - 执行一轮 TURN 并观察 VERIFY 步骤
+      - 检查自检清单运行情况
+    expected:
+      - VERIFY 步骤运行 style_lint
+      - 自检清单 C-1 至 C-16 均可执行（覆盖无渐变、阴影限制、1px 边框、三级深度、字体、过渡、圆角、发光、强调色、嵌套卡片、渐变文字、粗边框、eyebrow、对比度、reduced-motion、响应式）
+    acceptance:
+      - "A-16"
+# YESTEST // style // V1.3 // G0

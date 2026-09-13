@@ -1,0 +1,34 @@
+# Gate report template (assets/gate-report.template.yaml)
+# 约定：G0-G11 每门有检查清单与校验流程；否决即回退（PRD 10）。
+gate_report_id: GR-001
+run_id: CCF-YYYY-MM-DD-NNN
+ticket_id: T-001
+artifact_id: A-001
+
+gate_id: "G0 | G1 | G2 | G3 | G4 | G5 | G6 | G7 | G8 | G9 | G10 | G11"
+gate_name: ""
+veto_owner: "CCO | PMO Lead | Analyst Lead | Architect Lead | QA Lead | Style Warden Lead | Red Team Lead | Integrator Lead | Archivist Lead | Learning Lead"
+
+checks:
+  - check_id: C-001
+    description: ""
+    required: true
+    passed: true
+    evidence: ""
+    notes: ""
+
+supplementary_inputs:
+  integration_outputs: []
+  ecosystem_outputs: []
+  differential_findings: []
+
+veto:
+  cast: false
+  by: ""
+  reason: ""
+
+result: "pass | fail"
+fallback: "none | rollback | re_execute | h2 | h4"
+checked_by: ""
+checked_at: "ISO8601"
+version: 1

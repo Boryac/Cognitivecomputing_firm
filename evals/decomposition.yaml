@@ -1,0 +1,155 @@
+eval_id: decomposition-01
+title: 微任务拆解与调度测试
+target: references/microtask.md
+source: "PRD V1.3 章节：6.21、6.22、8、21（A-12、A-13、A-36）"
+cases:
+  - id: "decomposition-01-01"
+    label: 粒度阈值强制拆分
+    scenario: 任一粒度条件超阈值时强制拆分，直至每个微任务满足阈值。
+    preconditions:
+      - 已提取 Epic 目标、验收、约束
+    steps:
+      - 检查上下文窗口数、步骤数、主产物数、验收条件数、角色数、依赖数、预估耗时
+      - 对超阈值项继续拆分
+    expected:
+      - 上下文窗口数超过 1、步骤数超过 3、主产物数超过 1、验收条件数超过 3、角色数超过 1、依赖数超过 3、预估耗时超过 1 轮 TURN 时均触发强制拆分
+      - 拆分后每个微任务各项指标均在阈值内
+      - 输出校验记录说明满足粒度阈值
+    acceptance:
+      - "A-12"
+  - id: "decomposition-01-02"
+    label: 单目标单产物单验收
+    scenario: 每个微任务保持单一目标、单一产物、单一责任人、单一验收。
+    preconditions:
+      - 拆解已完成
+    steps:
+      - 逐条核对微任务的目标、产物、责任人、验收字段
+      - 检查是否合并可独立验收的任务
+    expected:
+      - 每个微任务恰有一个目标、一个产物、一个责任人、一个验收条件
+      - 未合并可独立验收的任务
+      - 每个微任务支持回滚、上下文独立、预算有限、依赖明确
+    acceptance:
+      - "A-12"
+  - id: "decomposition-01-03"
+    label: MicroTask 模板字段齐全
+    scenario: 微任务按模板生成，字段完整且取值合法。
+    preconditions:
+      - 拆解已完成，生成 MicroTask 列表
+    steps:
+      - 任取一个 MicroTask 对照模板字段
+    expected:
+      - 字段包含 microtask_id、parent、objective、function、individual、inputs、outputs、acceptance、budget、rollback、status、gate、integration_inputs、ecosystem_inputs、differential_required、learning_weight
+      - microtask_id 形如 MT-001，parent 指向所属 Workcell
+      - budget 含 tokens 与 tools 子字段
+      - status 取值为 pending
+    acceptance:
+      - "A-12"
+  - id: "decomposition-01-04"
+    label: 任务层级数量范围
+    scenario: Intent 至 MicroTask 各层数量落在规定范围。
+    preconditions:
+      - 收到用户输入转为 Intent
+    steps:
+      - 统计各层数量
+    expected:
+      - Intent 为 1
+      - Epic 数量 1 至 5
+      - Workstream 数量 2 至 10
+      - Workcell 数量 3 至 30
+      - MicroTask 数量 10 至 200
+    acceptance:
+      - "A-12"
+  - id: "decomposition-01-05"
+    label: 职能分配
+    scenario: 每个微任务分配一个职能，按任务特征匹配专长。
+    preconditions:
+      - MicroTask 列表已生成
+    steps:
+      - 检查每个微任务的 function 字段
+    expected:
+      - function 字段值为 12 个职能之一（cco、coo、pmo、analyst、architect、specialist、red_team、style_warden、qa、integrator、learning、archivist）
+      - 职能与任务特征匹配
+    acceptance:
+      - "A-13"
+  - id: "decomposition-01-06"
+    label: 个人明确指定
+    scenario: 每个微任务明确指定个人，且个人属于对应职能清单。
+    preconditions:
+      - 职能分配完成
+    steps:
+      - 检查每个微任务的 individual 字段
+      - 输出 staffing（含职能、角色、个人）
+    expected:
+      - individual 字段非空且属于该职能清单内的个人
+      - staffing 输出含职能、角色、个人三层
+      - 同名个人不跨职能引用
+    acceptance:
+      - "A-13"
+  - id: "decomposition-01-07"
+    label: 高寻差需求必调寻差个人
+    scenario: differential_required=true 的微任务必须调度寻差个人。
+    preconditions:
+      - 高寻差需求已被识别
+    steps:
+      - 标记 differential_required=true
+      - 检查个人分配
+    expected:
+      - 分配结果包含对应职能的寻差个人（analyst 含 gamma、architect 含 delta、specialist 含 beta、red_team 含 differential、style_warden 含 differential、qa 含 differential、archivist 含 differential）
+    acceptance:
+      - "A-36"
+  - id: "decomposition-01-08"
+    label: DAG 拓扑排序
+    scenario: 建立依赖边后输出拓扑有序的 DAG，上游未过门则下游不启动。
+    preconditions:
+      - MicroTask 及依赖关系已明确
+    steps:
+      - 标注数据、顺序、资源、审批依赖
+      - 建立依赖边
+      - 拓扑排序并输出 DAG
+    expected:
+      - 依赖边完整记录
+      - DAG 无环且拓扑有序
+      - 上游微任务未过门时下游微任务不启动
+    acceptance:
+      - "A-12"
+  - id: "decomposition-01-09"
+    label: RACI 生成
+    scenario: PMO 拆解时输出 RACI 矩阵，一人一责。
+    preconditions:
+      - 拆解进行中
+    steps:
+      - 生成 RACI 矩阵
+      - 检查职责唯一性
+    expected:
+      - RACI 输出覆盖全部微任务
+      - 每个微任务责任唯一，无双重主责
+    acceptance:
+      - "A-13"
+  - id: "decomposition-01-10"
+    label: 按复杂度调度人数
+    scenario: 个人调度数量随任务复杂度变化。
+    preconditions:
+      - 任务已拆解
+    steps:
+      - 按任务复杂度选择调度档位
+      - 检查每职能调用人数
+    expected:
+      - 任务简单时每职能调用 1 名个人
+      - 任务一般时每职能调用 2 至 3 名个人
+      - 任务复杂时每职能调用全部个人
+    acceptance:
+      - "A-13"
+  - id: "decomposition-01-11"
+    label: 不合并可独立验收任务
+    scenario: 拆分时应保持可独立验收任务的独立性。
+    preconditions:
+      - 已识别可独立验收的子任务
+    steps:
+      - 检查拆解结果是否将可独立验收任务合并
+    expected:
+      - 可独立验收的任务保持独立微任务，不合并
+      - 合并行为记录为违规并纠正
+    acceptance:
+      - "A-12"
+# YESTEST // decomposition // V1.3 // G0

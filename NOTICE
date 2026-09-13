@@ -1,0 +1,41 @@
+Cognitivecomputing_firm (CCF)
+Copyright (C) 2026 Yestest Holdings Limited
+
+This Skill is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as
+published by the Free Software Foundation, either version 3 of the
+License, or (at your option) any later version.
+
+This Skill is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this Skill. If not, see <https://www.gnu.org/licenses/>.
+
+---
+
+Third-Party Notices
+
+The following external works are referenced or integrated with this
+Skill. Each external work retains its own copyright and license, which
+remains independent of the AGPL-3.0 license of this Skill.
+
+1. grill-me
+   - Purpose: external review input skill, integrated as a mandatory
+     collaboration level, called as a supplement to gates G7 and G8.
+   - Source: mattpocock/skills/grill-me
+   - Installation: npx skills add mattpocock/skills/grill-me
+   - License: as declared by the grill-me project itself.
+   - Relation: called through an interface; it does not form a combined
+     work with this Skill, and its license remains independent.
+
+2. The GNU Affero General Public License text (LICENSE file)
+   - Copyright (C) 2007 Free Software Foundation, Inc.
+   - Reproduced verbatim in accordance with the license's own terms,
+     which permit verbatim copying.
+
+No other third-party licensed content is included in this distribution.
+Platform and host-environment terms apply to the platform itself and are
+out of scope of this Skill's license.

@@ -1,0 +1,18 @@
+# MicroTask template (assets/microtask.template.yaml)
+# 约定：单目标、单产物、单责任人、单验收；粒度阈值见 PRD 8.3。
+microtask_id: MT-001
+parent: WC-001
+objective: ""
+function: "cco | coo | pmo | analyst | architect | specialist | red_team | style_warden | qa | integrator | learning | archivist"
+individual: ""
+inputs: []
+outputs: []
+acceptance: []
+budget: {"tokens": 0, "tools": []}
+rollback: ""
+status: "pending | executing | passing | failed | committed | checkpointed"
+gate: "G0 | G1 | G2 | G3 | G4 | G5 | G6 | G7 | G8 | G9 | G10 | G11"
+integration_inputs: []
+ecosystem_inputs: []
+differential_required: false
+learning_weight: "default | high | low"

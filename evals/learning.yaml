@@ -1,0 +1,145 @@
+eval_id: learning-01
+title: 自升级学习适配测试
+target: scripts/ccf_adapt.py
+source: "PRD V1.3 章节：6.17、9.1、13.6、20、21（A-57、A-58、A-59、A-60）"
+cases:
+  - id: "learning-01-01"
+    label: 画像沉淀
+    scenario: 运行数据、用户修正与反馈信号沉淀为用户画像。
+    preconditions:
+      - CCF 已运行多个 TURN
+    steps:
+      - 运行 LEARN 步骤
+      - 检查画像文件
+    expected:
+      - 生成 state/profile.json
+      - 文件包含 version、created_at、updated_at、preferences、adaptations、blacklist
+      - 记录 LEARNING_PROFILE_UPDATED 事件
+    acceptance:
+      - "A-57"
+  - id: "learning-01-02"
+    label: 版本可追溯
+    scenario: 画像更新后版本递增，适配记录可追溯。
+    preconditions:
+      - 画像已存在（如 P-1）
+    steps:
+      - 触发一次画像更新
+      - 检查版本与适配记录
+    expected:
+      - version 递增（如 P-1 变为 P-2）
+      - adaptations 记录 adapt_id、type、description、applied_at、level、status
+      - 旧版本画像可被引用或回滚
+    acceptance:
+      - "A-57"
+  - id: "learning-01-03"
+    label: 按 D 级分级应用
+    scenario: 学习适配按决策等级分级应用。
+    preconditions:
+      - 存在待应用的适配建议
+    steps:
+      - 按适配等级执行应用
+    expected:
+      - D0、D1 级自动应用
+      - D2 级自动应用并抽样审计
+      - D3 级需 H2 人工确认后才应用
+      - D4 级需 H4 人工决策
+      - adaptations 中 level 字段与执行路径一致
+    acceptance:
+      - "A-58"
+  - id: "learning-01-04"
+    label: 黑名单拦截
+    scenario: 黑名单核心规则不被自动修改。
+    preconditions:
+      - profile.json blacklist 已加载
+    steps:
+      - 提出针对黑名单项的适配建议
+      - 尝试自动应用
+    expected:
+      - blacklist 包含 style_law、expression_constraint、license、organization_hierarchy、gate_veto、h_point_structure、security_compliance
+      - 任一黑名单项的适配不被自动应用
+      - 记录拦截事件
+    acceptance:
+      - "A-58"
+  - id: "learning-01-05"
+    label: G11 学习门守护
+    scenario: 突破核心边界的适配建议被 G11 拦截。
+    preconditions:
+      - 存在核心边界相关的适配建议
+    steps:
+      - 执行 G11 学习门
+    expected:
+      - 拦截突破核心边界的适配
+      - 记录 LEARNING_GATE_BLOCKED 事件
+      - 建议不生效，核心机制保持原样
+    acceptance:
+      - "A-60"
+  - id: "learning-01-06"
+    label: /ccf profile 查看画像
+    scenario: 用户可查看当前画像。
+    preconditions:
+      - 画像已存在
+    steps:
+      - 用户输入 /ccf profile
+      - 观察输出
+    expected:
+      - 输出 "YESTEST // PROFILE // P-2" 头部
+      - 内容含版本、更新时间、偏好（默认交付格式、主题、任务粒度）、适配记录、黑名单说明
+    acceptance:
+      - "A-59"
+  - id: "learning-01-07"
+    label: /ccf profile rollback 回滚
+    scenario: 支持回滚到上一版画像。
+    preconditions:
+      - 画像存在两个以上版本（如 P-2、P-1）
+    steps:
+      - 用户输入 /ccf profile rollback
+      - 观察画像版本
+    expected:
+      - 画像版本回退到上一版（P-2 回退至 P-1）
+      - 回滚后运行行为与旧版本画像一致
+      - 回滚过程留痕
+    acceptance:
+      - "A-59"
+  - id: "learning-01-08"
+    label: /ccf profile reset 重置
+    scenario: 支持将画像重置为初始状态。
+    preconditions:
+      - 画像存在适配记录
+    steps:
+      - 用户输入 /ccf profile reset
+      - 观察画像状态
+    expected:
+      - 画像重置为初始状态
+      - 适配记录清空或标记重置
+      - 黑名单保留，核心规则仍不被修改
+    acceptance:
+      - "A-59"
+  - id: "learning-01-09"
+    label: 自升级不修改核心机制
+    scenario: 自升级过程不改动风格法、表达约束、许可、门禁等核心机制。
+    preconditions:
+      - 自升级已多次运行
+    steps:
+      - 比对核心规则引用文件在自升级前后的内容
+    expected:
+      - 风格法规则保持不变
+      - 表达约束规则保持不变
+      - 许可与来源声明规则保持不变
+      - 组织层级、门禁否决、H 点结构、安全合规机制保持不变
+    acceptance:
+      - "A-60"
+  - id: "learning-01-10"
+    label: 适配留痕与回滚支持
+    scenario: 所有适配变更可追溯、可回滚。
+    preconditions:
+      - 已发生若干适配变更
+    steps:
+      - 检查适配记录与事件链
+    expected:
+      - 每项适配变更记录 LEARNING_ADAPT_APPLIED 事件
+      - adaptations 与事件链一一对应
+      - 画像版本化支持回滚与重置
+    acceptance:
+      - "A-58"
+      - "A-59"
+# YESTEST // learning // V1.3 // G0

@@ -1,0 +1,38 @@
+{
+  "run_id": "CCF-YYYY-MM-DD-NNN",
+  "active": true,
+  "phase": "locked",
+  "theme": "light",
+  "style": "macos-vibrancy-light-v1",
+  "license": "AGPL-3.0",
+  "contract": {
+    "objective": "",
+    "scope": "",
+    "acceptance": [],
+    "risk": [],
+    "budget": {"tokens": 0, "tools": [], "time_minutes": 0},
+    "theme": "light",
+    "recommended_pool": []
+  },
+  "integration": {
+    "grill_me": {
+      "installed": false,
+      "decision": "null"
+    }
+  },
+  "ecosystem": {
+    "auto_enabled": true,
+    "pool_size": 0
+  },
+  "learning": {
+    "profile_version": "P-0",
+    "auto_apply": true
+  },
+  "staffing": {
+    "functions": [],
+    "individuals": []
+  },
+  "created_at": "",
+  "updated_at": "",
+  "hash": ""
+}

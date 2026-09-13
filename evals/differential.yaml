@@ -1,0 +1,144 @@
+eval_id: differential-01
+title: 寻差机制测试
+target: references/differential.md
+source: "PRD V1.3 章节：6.22、13.5、20.2、21（A-36、A-37、A-38、A-39、A-40）"
+cases:
+  - id: "differential-01-01"
+    label: 高寻差需求必调寻差个人
+    scenario: 高寻差需求任务必须调用寻差个人。
+    preconditions:
+      - 任务被识别为高寻差需求
+    steps:
+      - 执行 STAFF 阶段个人分配
+      - 检查分配结果
+    expected:
+      - staffing 中包含寻差个人
+      - differential_required=true 的微任务分配对应职能寻差个人
+      - 记录 DIFFERENTIAL_STARTED 事件
+    acceptance:
+      - "A-36"
+  - id: "differential-01-02"
+    label: 寻差个人清单
+    scenario: 各职能寻差个人按清单配置。
+    preconditions:
+      - 各职能个人清单已加载
+    steps:
+      - 逐职能核对寻差个人
+    expected:
+      - Analyst 寻差个人为 gamma
+      - Architect 寻差个人为 delta
+      - Specialist 寻差个人为 beta
+      - Red Team 寻差个人为 differential
+      - Style Warden 寻差个人为 differential
+      - QA 寻差个人为 differential
+      - Archivist 寻差个人为 differential
+    acceptance:
+      - "A-36"
+  - id: "differential-01-03"
+    label: 写入 differential.json
+    scenario: 寻差个人产出写入寻差发现索引。
+    preconditions:
+      - 寻差个人已完成产出
+    steps:
+      - 归集寻差产出
+      - 检查 state/differential.json
+    expected:
+      - findings 数组新增条目
+      - 每条含 finding_id、finder、function、type、severity、description、evidence、recommendation、status
+      - 记录 DIFFERENTIAL_FINDING 事件
+    acceptance:
+      - "A-37"
+  - id: "differential-01-04"
+    label: 产出结构字段合法
+    scenario: 寻差发现的结构与类型枚举合法。
+    preconditions:
+      - differential.json 已生成
+    steps:
+      - 逐一校验 findings 字段
+    expected:
+      - type 取值为 omitted_difference、default_assumption、merged_boundary、ignored_counterexample、alternative_path、drift、spec_impl_gap 之一
+      - severity 取值为 low、medium、high 之一
+      - finder 与 function 字段与寻差个人所属职能一致
+      - evidence 与 recommendation 非空
+    acceptance:
+      - "A-37"
+  - id: "differential-01-05"
+    label: 作为 G7 G8 输入
+    scenario: differential_findings 必须作为 G7、G8 门禁输入。
+    preconditions:
+      - differential_findings 已生成
+    steps:
+      - 执行 G7 红队门与 G8 QA 门
+    expected:
+      - G7 读取 differential_findings 作为输入
+      - G8 读取 differential_findings 作为输入
+      - 门禁报告中体现对寻差发现的核验
+    acceptance:
+      - "A-38"
+  - id: "differential-01-06"
+    label: 寻差发现被忽略记录理由
+    scenario: 寻差发现被忽略时必须记录理由。
+    preconditions:
+      - 某寻差发现未被采纳
+    steps:
+      - 标记该发现为 ignored
+      - 检查记录
+    expected:
+      - status 变为 ignored
+      - ignore_reason 非空且写明理由
+      - 记录 DIFFERENTIAL_IGNORED 事件
+    acceptance:
+      - "A-39"
+  - id: "differential-01-07"
+    label: 个人产出被忽略记录理由
+    scenario: 个人产出被忽略时在分配索引中记录理由。
+    preconditions:
+      - 某个人产出未并入合并结果
+    steps:
+      - 在 individuals.json 中标记该分配
+      - 检查记录
+    expected:
+      - assignments 中该条目 status 变为 ignored
+      - ignore_reason 非空且写明理由
+      - 记录 INDIVIDUAL_IGNORED 事件
+    acceptance:
+      - "A-40"
+  - id: "differential-01-08"
+    label: 无否决权但必须被记录
+    scenario: 寻差个人产出无否决权，但必须被记录。
+    preconditions:
+      - 寻差发现已产出
+    steps:
+      - 寻差发现与主线意见不一致时观察处理
+    expected:
+      - 寻差个人产出不构成否决
+      - 无论采纳与否均被记录在 differential_findings
+      - 负责人合并或选择时标注差异点
+    acceptance:
+      - "A-39"
+  - id: "differential-01-09"
+    label: 不因进度压力跳过
+    scenario: 寻差个人不因进度压力放弃寻差。
+    preconditions:
+      - 高寻差需求任务临近交付时限
+    steps:
+      - 执行该任务寻差环节
+      - 观察是否跳过
+    expected:
+      - 寻差环节不被跳过
+      - 寻差产出完整记录
+    acceptance:
+      - "A-36"
+  - id: "differential-01-10"
+    label: 寻差发现输出格式
+    scenario: 寻差发现按固定格式输出。
+    preconditions:
+      - 寻差发现已生成
+    steps:
+      - 输出寻差发现
+    expected:
+      - 输出头部为 "YESTEST // DIFFERENTIAL // FINDING"
+      - 内容含 finder、function、type、severity、description、evidence、recommendation、status
+    acceptance:
+      - "A-37"
+# YESTEST // differential // V1.3 // G0

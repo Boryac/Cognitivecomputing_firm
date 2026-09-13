@@ -1,0 +1,20 @@
+AUTHORS
+
+Cognitivecomputing_firm (CCF) is maintained by Yestest Holdings Limited.
+
+Primary author and maintainer:
+  Yestest Holdings Limited  <huangboryac@gmail.com>
+
+Contributors are listed chronologically by first contribution.
+To contribute, open a merge request against the source repository
+(see manifest.yaml source_code field) and agree to license your
+contributions under the AGPL-3.0 (or any later version).
+
+This Skill references and integrates the following external author
+works (independent licenses apply):
+
+  mattpocock — grill-me (https://github.com/mattpocock/skills/grill-me)
+
+All code, templates, references and evaluation cases in this
+distribution are original work of the contributors above unless
+explicitly attributed otherwise in NOTICE.

@@ -1,0 +1,31 @@
+{
+  "version": "P-0",
+  "created_at": "",
+  "updated_at": "",
+  "preferences": {
+    "delivery_default_format": "pdf",
+    "theme_preference": "light",
+    "task_granularity": "standard",
+    "individual_weight": {},
+    "terminology_preference": []
+  },
+  "adaptations": [
+    {
+      "adapt_id": "AD-0001",
+      "type": "preference",
+      "description": "",
+      "applied_at": "",
+      "level": "D0",
+      "status": "active"
+    }
+  ],
+  "blacklist": [
+    "style_law",
+    "expression_constraint",
+    "license",
+    "organization_hierarchy",
+    "gate_veto",
+    "h_point_structure",
+    "security_compliance"
+  ]
+}

@@ -1,0 +1,172 @@
+eval_id: ecosystem-01
+title: Skill 生态与协同编排测试
+target: scripts/ecosystem_scanner.py
+source: "PRD V1.3 章节：5.1、5.3、5.4、5.5、5.6、5.7、21（A-47 至 A-53）"
+cases:
+  - id: "ecosystem-01-01"
+    label: BOOTSTRAP 全量扫描
+    scenario: BOOTSTRAP 阶段 1 自动全量扫描所有已安装 Skill。
+    preconditions:
+      - 平台安装有多个 Skill
+    steps:
+      - 进入 BOOTSTRAP 阶段 1
+      - 观察扫描结果
+    expected:
+      - 读取平台已安装 Skill 完整列表
+      - 输出 ecosystem.json（含 scan_time、total_installed、skills）
+      - 记录 ECOSYSTEM_SCANNED 事件
+    acceptance:
+      - "A-47"
+  - id: "ecosystem-01-02"
+    label: 匹配度分级
+    scenario: 基于任务语义计算匹配度并分级。
+    preconditions:
+      - 全量扫描完成
+    steps:
+      - 按产出类型、能力标签、输入输出契约计算匹配度
+    expected:
+      - 得分不低于 80 判为强匹配
+      - 得分 50 至 79 判为弱匹配
+      - 得分低于 50 判为无关
+      - 分级写入 ecosystem.json 的 level 字段
+    acceptance:
+      - "A-48"
+  - id: "ecosystem-01-03"
+    label: 强匹配进入 H1 确认
+    scenario: 强匹配 Skill 在 H1 启动契约中一并确认，确认后进入协同池。
+    preconditions:
+      - 存在强匹配 Skill
+    steps:
+      - 启动契约 H1 展示推荐列表
+      - 用户确认协同池
+    expected:
+      - H1 输出 "YESTEST // ECOSYSTEM // RECOMMENDATIONS"，含匹配度与级别
+      - 用户确认后 in_pool 为 true
+      - 记录 ECOSYSTEM_MATCHED、ECOSYSTEM_CONFIRMED
+    acceptance:
+      - "A-48"
+  - id: "ecosystem-01-04"
+    label: 协同编排按节点调用
+    scenario: 协同 Skill 按能力类型映射到执行节点并按统一协议调用。
+    preconditions:
+      - 协同池已有确认 Skill
+    steps:
+      - 按能力类型编排调用时机
+    expected:
+      - 内容校验类在对应门禁前调用
+      - 内容生成类在 EXECUTE 阶段 Specialist 执行后调用
+      - 格式转换类在 INTEGRATE 阶段交付前调用
+      - 分析增强类在 SCOPE 后、PLAN 前调用
+      - 调用使用 CCF::ECOSYSTEM_CALL 协议，含 target、run_id、ticket_id、artifact_id、call_point、input、acceptance、expected_output
+    acceptance:
+      - "A-49"
+  - id: "ecosystem-01-05"
+    label: 输出仅作补充输入
+    scenario: 协同输出只作为对应环节补充输入，不替代原有角色职责。
+    preconditions:
+      - 协同调用已返回输出
+    steps:
+      - 观察协同输出进入门禁的方式
+    expected:
+      - 输出仅作为对应门禁补充输入
+      - 不替代原职能角色职责
+      - 无一票否决权
+    acceptance:
+      - "A-49"
+  - id: "ecosystem-01-06"
+    label: 调用失败不阻塞
+    scenario: 协同调用失败记录事件，主流程继续。
+    preconditions:
+      - 协同池存在 Skill
+    steps:
+      - 使一次协同调用失败
+    expected:
+      - 记录 ECOSYSTEM_CALL_FAILED 事件
+      - 主流程继续执行
+    acceptance:
+      - "A-50"
+  - id: "ecosystem-01-07"
+    label: 连续 3 次失败移出协同池
+    scenario: 同一协同 Skill 连续 3 次调用失败自动移出协同池。
+    preconditions:
+      - 某协同 Skill 已失败 2 次（failed_streak 为 2）
+    steps:
+      - 该 Skill 再次调用并失败
+    expected:
+      - 连续 3 次失败后自动移出协同池
+      - in_pool 变为 false，记录事件
+      - 本 Run 内不再自动调用该 Skill
+    acceptance:
+      - "A-50"
+  - id: "ecosystem-01-08"
+    label: 格式转换失败回退
+    scenario: 格式转换类协同失败时回退默认交付格式。
+    preconditions:
+      - 格式转换类协同 Skill 在协同池
+    steps:
+      - 使格式转换调用失败
+      - 观察交付流程
+    expected:
+      - 回退到默认交付格式
+      - 核心产物交付不受影响
+    acceptance:
+      - "A-50"
+  - id: "ecosystem-01-09"
+    label: 许可兼容校验
+    scenario: 探测时自动校验许可兼容性，不兼容者不进入推荐。
+    preconditions:
+      - 平台上存在不同许可的 Skill
+    steps:
+      - 执行许可兼容校验
+    expected:
+      - AGPL-3.0 与 AGPL-3.0、GPL-3.0、MIT、BSD 兼容，可自动联动
+      - 闭源或专有许可标记为高风险，默认不进入推荐
+      - 用户手动启用不兼容 Skill 时二次提示
+      - G5 合规门复核许可兼容性
+    acceptance:
+      - "A-51"
+  - id: "ecosystem-01-10"
+    label: 手动命令控制
+    scenario: 支持手动扫描、列表、启用、禁用与自动协同开关。
+    preconditions:
+      - CCF 已激活
+    steps:
+      - 依次执行 /ccf skills scan、/ccf skills list、/ccf skills enable <skill_id>、/ccf skills disable <skill_id>、/ccf skills auto on/off
+    expected:
+      - scan 立即全量重扫并更新推荐列表
+      - list 列出当前协同池、匹配度、状态
+      - enable 将指定 Skill 置入协同池
+      - disable 将指定 Skill 移出协同池
+      - auto on 开启自动推荐、auto off 关闭自动推荐
+      - 记录 ECOSYSTEM_DISABLED、ECOSYSTEM_AUTO_TOGGLED 等事件
+    acceptance:
+      - "A-52"
+  - id: "ecosystem-01-11"
+    label: 关闭自动协同
+    scenario: 关闭自动推荐后仅保留 grill-me 强制联动。
+    preconditions:
+      - 自动协同已开启
+    steps:
+      - 用户输入 /ccf skills auto off
+      - 观察后续探测与提示
+    expected:
+      - 其余协同不再自动探测和提示
+      - grill-me 强制联动保持不变
+      - 记录 ECOSYSTEM_AUTO_TOGGLED
+    acceptance:
+      - "A-52"
+  - id: "ecosystem-01-12"
+    label: grill-me 规则兼容
+    scenario: grill-me 作为强制联动级运行，原有规则无变更。
+    preconditions:
+      - CCF 与 grill-me 联动已生效
+    steps:
+      - 检查 grill-me 的分级、调用节奏与探测定时
+    expected:
+      - grill-me 以强制联动级运行，无需确认即可自动调用
+      - 每轮 TURN VERIFY 步骤复查
+      - 探测结果缓存在同一 Run 内有效
+      - 原联动规则（调用、失败、拒绝、关闭）均不因协同机制变更
+    acceptance:
+      - "A-53"
+# YESTEST // ecosystem // V1.3 // G0

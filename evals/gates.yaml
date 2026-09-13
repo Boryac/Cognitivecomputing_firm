@@ -1,0 +1,159 @@
+eval_id: gates-01
+title: 质量门禁测试
+target: scripts/gate_runner.py
+source: "PRD V1.3 章节：9、10、12.2、21（A-14、A-15、A-16、A-45）"
+cases:
+  - id: "gates-01-01"
+    label: G0 立项门通过
+    scenario: 目标、范围、验收条件齐备时 G0 通过。
+    preconditions:
+      - 已形成运行契约
+    steps:
+      - 执行 G0 立项门
+    expected:
+      - 目标、范围、验收条件三项均满足时 G0 通过
+      - 通过后进入契约阶段
+    acceptance:
+      - "A-15"
+  - id: "gates-01-02"
+    label: G1 范围门检查
+    scenario: WBS、DAG、RACI 完整时通过，缺失则否决并回退。
+    preconditions:
+      - 拆解已完成
+    steps:
+      - 执行 G1 范围门
+    expected:
+      - WBS、DAG、RACI 齐全时 G1 通过
+      - 任一缺失时 PMO Lead 否决并回退 PLAN
+    acceptance:
+      - "A-15"
+  - id: "gates-01-03"
+    label: G2 证据门否决
+    scenario: 事实与假设混淆、缺失来源或置信度时证据门否决。
+    preconditions:
+      - research_brief 存在
+    steps:
+      - 执行 G2 证据门
+    expected:
+      - 事实与假设未区分、来源缺失、置信度缺失任一情形均触发 Analyst Lead 否决
+      - 否决后回退 EXECUTE 重做
+    acceptance:
+      - "A-15"
+  - id: "gates-01-04"
+    label: G6 风格门强制通过
+    scenario: 风格违规即否决，风格合规 100% 才放行。
+    preconditions:
+      - artifact 存在
+    steps:
+      - 执行 G6 风格门
+    expected:
+      - 产物含渐变、发光、装饰动画等任一违规均否决
+      - 违规未修正不通过
+      - 修正后 style_lint 零违规才放行
+    acceptance:
+      - "A-16"
+      - "A-15"
+  - id: "gates-01-05"
+    label: G7 红队门否决
+    scenario: 存在未记录失败模式或反例时红队门否决。
+    preconditions:
+      - artifact 与 grill-me 输出可用
+    steps:
+      - 执行 G7 红队门
+    expected:
+      - 发现漏记的失败模式或反例时 Red Team Lead 行使否决权
+      - 否决后回退 EXECUTE
+    acceptance:
+      - "A-15"
+  - id: "gates-01-06"
+    label: G8 QA 门否决
+    scenario: 验收未全满足或追溯链缺失时 QA 门否决。
+    preconditions:
+      - artifact 与验收条件可用
+    steps:
+      - 执行 G8 QA 门
+    expected:
+      - 验收条件未全部满足或追溯链缺失时 QA Lead 行使否决权
+      - 否决后回退 EXECUTE
+    acceptance:
+      - "A-15"
+  - id: "gates-01-07"
+    label: G5 G9 许可检查
+    scenario: G5 与 G9 检查 AGPL-3.0 许可与来源声明。
+    preconditions:
+      - artifact 已产出
+    steps:
+      - 执行 G5 合规门与 G9 交付门的许可检查
+    expected:
+      - 缺失许可声明或来源声明时对应门否决
+      - 检查通过时记录 LICENSE_CHECK_PASSED
+    acceptance:
+      - "A-45"
+  - id: "gates-01-08"
+    label: G9 表达检查
+    scenario: 产物文本违反表达约束时 G9 否决并回退。
+    preconditions:
+      - artifact 已产出
+    steps:
+      - 执行 G9 交付门表达检查
+    expected:
+      - 产物（含界面文案与代码注释）出现 E-1 至 E-8 覆盖的表述时 G9 否决
+      - 违规即回退修改，修正后重新检查
+    acceptance:
+      - "A-15"
+  - id: "gates-01-09"
+    label: G11 学习门拦截
+    scenario: 突破核心边界的学习适配被 G11 拦截。
+    preconditions:
+      - 存在针对黑名单项的学习适配建议
+    steps:
+      - 执行 G11 学习门
+    expected:
+      - 针对黑名单核心规则的适配被拦截
+      - 记录 LEARNING_GATE_BLOCKED 事件
+      - 适配建议不生效
+    acceptance:
+      - "A-15"
+  - id: "gates-01-10"
+    label: 连续 3 次失败触发 H4
+    scenario: 同一职能连续 3 次未过门时触发人工介入。
+    preconditions:
+      - 某职能已连续 2 次未过门
+    steps:
+      - 该职能产物再次执行门禁并失败
+    expected:
+      - 连续 3 次未过门时记录并触发 H4
+      - 微任务执行循环连续 3 次失败同样触发 H4
+      - 输出 H 点决策请求，等待人工决策
+    acceptance:
+      - "A-14"
+  - id: "gates-01-11"
+    label: 一票否决生效
+    scenario: 拥有否决权的角色行使否决即不过门，协同输出无一票否决权。
+    preconditions:
+      - 门禁检查进行中
+    steps:
+      - 角色行使否决权
+      - 协同 Skill 输出与主流程意见冲突
+    expected:
+      - Red Team、Style Warden、QA、CCO、Learning 任一否决即不过门
+      - grill-me 与协同 Skill 输出不构成否决
+    acceptance:
+      - "A-15"
+  - id: "gates-01-12"
+    label: H1-H4 可触发可恢复
+    scenario: 四个 H 点均可触发并可在人工回复后恢复。
+    preconditions:
+      - CCF 已激活
+    steps:
+      - 依次触发 H1 启动契约、H2 高风险不可逆、H3 对外交付、H4 终止
+    expected:
+      - H1 每次启动触发契约确认
+      - H2 在 D3 风险场景触发
+      - H3 在交付前触发
+      - H4 在连续失败、预算超限、目标变更、核心规则变更时触发
+      - H 点输出格式为 YESTEST // H{N} // DECISION REQUIRED，含事项、背景、选项、建议、风险、影响
+      - 回复 approve、revise、reject 后流程可恢复
+    acceptance:
+      - "A-14"
+# YESTEST // gates // V1.3 // G0

@@ -1,0 +1,181 @@
+eval_id: integration-01
+title: grill-me 联动测试
+target: scripts/integration_probe.py
+source: "PRD V1.3 章节：5.2、20.1、21（A-24 至 A-35）"
+cases:
+  - id: "integration-01-01"
+    label: 已安装时主动调用
+    scenario: 探测到 grill-me 已安装时，CCF 在 TURN VERIFY 步骤主动调用。
+    preconditions:
+      - 平台已安装 grill-me
+      - integration.json 中 installed 为 true
+    steps:
+      - BOOTSTRAP 阶段 1 探测 grill-me
+      - 执行一轮 TURN 并观察 VERIFY 步骤
+    expected:
+      - 探测记录 INTEGRATION_PROBED、INTEGRATION_FOUND
+      - VERIFY 步骤发起 CCF::INTEGRATION_CALL
+      - 调用包含 target 为 grill-me、run_id、ticket_id、artifact_id、acceptance、expected_output
+    acceptance:
+      - "A-24"
+  - id: "integration-01-02"
+    label: 调用结果写入与门禁补充
+    scenario: 调用结果写入 integration.json 与事件，其输出作为 G7、G8 补充输入。
+    preconditions:
+      - 已发起对 grill-me 的调用
+    steps:
+      - 调用完成，观察结果记录
+    expected:
+      - 事件记录 INTEGRATION_CALLED、INTEGRATION_OK
+      - calls 数组写入 call_id、ticket_id、artifact_id、timestamp、result、findings_ref
+      - grill-me 输出作为 G7 红队门与 G8 QA 门的补充输入，不替代 Red Team 与 QA Auditor
+    acceptance:
+      - "A-24"
+  - id: "integration-01-03"
+    label: 未安装提示一次且含安装命令
+    scenario: 未安装时输出提示，同一 Run 仅一次，提示包含固定安装命令。
+    preconditions:
+      - 平台未安装 grill-me
+    steps:
+      - BOOTSTRAP 阶段 1 探测
+      - 观察提示输出
+    expected:
+      - 输出 "YESTEST // INTEGRATION // OPTIONAL"
+      - 提示包含安装命令 "npx skills add mattpocock/skills/grill-me"
+      - 同一 Run 内第二次不重复提示
+      - 记录 INTEGRATION_MISSING、INTEGRATION_PROMPTED
+    acceptance:
+      - "A-25"
+      - "A-26"
+  - id: "integration-01-04"
+    label: 选择 install 展示命令等待
+    scenario: 用户选择 install 后展示安装命令并等待执行回复。
+    preconditions:
+      - 已提示未安装 grill-me
+    steps:
+      - 用户回复 install
+      - 观察输出
+    expected:
+      - 输出 "YESTEST // INTEGRATION // INSTALL"
+      - 内容包含安装命令与回复选项 done、failed、skip
+      - 记录 INTEGRATION_INSTALL_STARTED
+    acceptance:
+      - "A-27"
+  - id: "integration-01-05"
+    label: done 触发一次重探测
+    scenario: 用户回复 done 后立即重探测一次，同一 Run 内仅一次。
+    preconditions:
+      - 已展示安装命令
+    steps:
+      - 用户回复 done
+      - 观察重探测行为
+    expected:
+      - 立即执行一次重探测
+      - 同一 Run 内重探测仅执行一次
+      - 重探测结果写入 events 与 integration.json
+    acceptance:
+      - "A-28"
+  - id: "integration-01-06"
+    label: 重探测成功进入调用模式
+    scenario: 重探测到 grill-me 后进入调用模式。
+    preconditions:
+      - 用户已回复 done
+    steps:
+      - 重探测成功
+      - 观察输出与后续行为
+    expected:
+      - 输出 "YESTEST // INTEGRATION // READY"
+      - integration.json 中 installed 变为 true、reprobe_result 为 found
+      - 后续每轮 VERIFY 步骤主动调用 grill-me
+      - 记录 INTEGRATION_INSTALLED
+    acceptance:
+      - "A-29"
+  - id: "integration-01-07"
+    label: 重探测失败记录并继续
+    scenario: 重探测未检测到 grill-me 时记录事件并继续主流程。
+    preconditions:
+      - 用户已回复 done
+    steps:
+      - 重探测未找到 grill-me
+      - 观察输出
+    expected:
+      - 输出 "YESTEST // INTEGRATION // UNCONFIRMED"
+      - 记录 INTEGRATION_INSTALL_UNCONFIRMED
+      - 主流程继续，本 Run 内不再提示
+    acceptance:
+      - "A-30"
+  - id: "integration-01-08"
+    label: 拒绝或稍后不重复提示
+    scenario: decline 与 later 均记录事件并继续，同一 Run 不再提示。
+    preconditions:
+      - 已提示未安装 grill-me
+    steps:
+      - 用户回复 decline
+      - 另起场景用户回复 later
+    expected:
+      - decline 记录 INTEGRATION_DECLINED，写入 integration.json
+      - later 记录 INTEGRATION_LATER
+      - 两种情况下主流程均继续，同一 Run 不再提示
+      - 门禁不因缺失联动而失效
+    acceptance:
+      - "A-31"
+  - id: "integration-01-09"
+    label: 调用失败不阻塞主流程
+    scenario: 调用失败记录事件并降级，不阻塞门禁。
+    preconditions:
+      - grill-me 已安装并进入调用模式
+    steps:
+      - 发起一次调用并使其失败
+      - 观察主流程
+    expected:
+      - 记录 INTEGRATION_FAILED，写入 integration.json（failed_streak 递增）
+      - 主流程继续执行
+      - 门禁不因调用失败阻塞
+      - grill-me 无一票否决权
+    acceptance:
+      - "A-32"
+  - id: "integration-01-10"
+    label: 安装失败不重试
+    scenario: 安装失败不重试，本 Run 不再提示；超时视为 skip。
+    preconditions:
+      - 已展示安装命令
+    steps:
+      - 用户回复 failed
+      - 另起场景用户超时未回复
+    expected:
+      - 回复 failed 记录 INTEGRATION_INSTALL_FAILED，不重试
+      - 超时未回复视为 skip，记录并继续主流程
+      - 本 Run 内不再提示
+    acceptance:
+      - "A-33"
+  - id: "integration-01-11"
+    label: 关闭联动
+    scenario: 通过命令关闭 grill-me 联动后不再探测、提示、调用。
+    preconditions:
+      - grill-me 联动已生效
+    steps:
+      - 用户输入 /ccf integration off grill-me
+      - 观察后续行为
+    expected:
+      - 后续不再探测 grill-me
+      - 后续不再提示安装
+      - 后续不再调用 grill-me
+      - 记录 INTEGRATION_DISABLED
+      - 同一 Run 内关闭状态保持
+    acceptance:
+      - "A-34"
+  - id: "integration-01-12"
+    label: 安装命令一致性
+    scenario: 安装命令在 SKILL.md、manifest.yaml、integration.json 中一致。
+    preconditions:
+      - 包文件齐全
+    steps:
+      - 分别读取三处安装命令字段
+    expected:
+      - SKILL.md 中安装命令为 "npx skills add mattpocock/skills/grill-me"
+      - manifest.yaml 中 install_command 为同一命令
+      - integration.json 中 install.command 为同一命令
+      - 三处完全一致
+    acceptance:
+      - "A-35"
+# YESTEST // integration // V1.3 // G0

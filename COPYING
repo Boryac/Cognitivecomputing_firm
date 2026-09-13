@@ -1,0 +1,27 @@
+Copying, Distribution and Modification
+
+Cognitivecomputing_firm (CCF) is distributed under the GNU Affero General
+Public License v3.0 (AGPL-3.0). The complete license text is provided in
+the LICENSE file of this distribution.
+
+This COPYING file serves as the distribution note required by the
+AGPL-3.0. It points to the full license text and summarizes the
+conditions under which this Skill may be copied, modified and conveyed.
+
+Key points (full text governs):
+
+1. You are free to use, modify, and redistribute this Skill under the
+   terms of the AGPL-3.0.
+2. If you distribute the Skill, or offer it to users over a network
+   (e.g. as part of a network service), you must provide access to the
+   complete corresponding source code at no charge.
+3. Modified versions must be licensed under the same license (AGPL-3.0
+   or any later version, per the terms of the license).
+4. Copyright and license notices must be preserved in all copies and in
+   any derivative distribution.
+5. Modifications must be annotated.
+6. The Skill is provided WITHOUT WARRANTY; see sections 15-17 of the
+   license for the full disclaimer and limitation of liability.
+
+See the LICENSE file for the authoritative terms:
+https://www.gnu.org/licenses/agpl-3.0.html

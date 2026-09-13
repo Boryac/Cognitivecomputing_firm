@@ -1,0 +1,31 @@
+# Individual template (assets/individual.template.yaml)
+# 约定：个人属性定义见 PRD 6.19；个人通用约束见 6.20。
+code: "alpha | beta | gamma | delta | attacker | breaker | boundary | differential | enforcer | terminology | accessibility | acceptance | compliance | trace | merger | consistency | source-keeper | ecosystem | observer | pattern-miner | proposer | guardrail | memory-keeper | version-keeper | retro-writer | staff-chief | adjudicator | budget-keeper | resource-planner | sla-watcher | decomposer | dag-builder | raci-mapper"
+function: "cco | coo | pmo | analyst | architect | specialist | red_team | style_warden | qa | integrator | learning | archivist"
+expertise: ""
+cognitive_style: ""
+preference: ""
+blind_spot: ""
+mission: ""
+kpi: []
+
+# prompt 组装（PRD 6.24）：全局表达约束 → 全局风格法 → 职能身份 →
+# 角色/个人身份 → 使命 → 偏好 → 盲区 → 约束 → 输入输出契约 →
+# prompt_brief → 用户画像偏好 → KPI
+prompt_assembly:
+  order:
+    - global_expression_constraint
+    - global_style_law
+    - function_identity
+    - individual_identity
+    - mission
+    - preference
+    - blind_spot
+    - constraints
+    - io_contract
+    - prompt_brief
+    - user_profile_preferences
+    - kpi
+
+differential: false
+version: 1

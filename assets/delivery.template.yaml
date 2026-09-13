@@ -1,0 +1,30 @@
+# Delivery template (assets/delivery.template.yaml)
+# 约定：SCOPE 阶段标注类型，按类型匹配交付管线（PRD 7.4）。
+delivery_id: DL-001
+run_id: CCF-YYYY-MM-DD-NNN
+ticket_id: T-001
+artifact_ids: []
+
+artifact_type: "document | spreadsheet | presentation | code | image | data | video_audio | app_service | mixed | other"
+default_format: "pdf | excel | pdf | source | png | json | source | deploy | archive | default"
+selected_format: ""
+pipeline: ""
+
+# 文档管线：md → 用户确认(H3) → latex → pdf；Word 需显式请求
+document_pipeline:
+  source_ref: ""
+  confirm: "approve | approve+word | revise | reject"
+  confirm_at: "ISO8601 | null"
+  latex_ref: ""
+  pdf_ref: ""
+  word_ref: ""
+
+format_conversion:
+  used_skill: ""
+  status: "ok | failed | fallback"
+  fallback_to: ""
+  note: ""
+
+license_notice: "AGPL-3.0 — 见 LICENSE；来源与许可声明保留"
+delivered_at: "ISO8601 | null"
+version: 1

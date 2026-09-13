@@ -1,0 +1,23 @@
+# Artifact template (assets/artifact.template.yaml)
+# 约定：所有产物标注 owner、版本、验收（通用约束 U-8）；只通过 Artifact 交接。
+artifact_id: A-001
+ticket_id: T-001
+microtask_id: MT-001
+function: ""
+individual: ""
+owner: ""
+version: 1
+type: "research_brief | spec | artifact | risk_register | style_report | qa_report | deliverable | memory | audit_package"
+title: ""
+body: ""
+acceptance: []
+status: "draft | under_review | gated | merged | ignored | delivered"
+gate: "G0 | G1 | G2 | G3 | G4 | G5 | G6 | G7 | G8 | G9 | G10 | G11"
+license_notice: "AGPL-3.0 — 见 LICENSE"
+created_at: "ISO8601"
+updated_at: "ISO8601"
+integration_inputs: []
+ecosystem_inputs: []
+differential_required: false
+rollback_ref: ""
+checkpoint_ref: ""

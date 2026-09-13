@@ -1,0 +1,156 @@
+eval_id: trigger-01
+title: 触发与激活生命周期测试
+target: SKILL.md
+source: "PRD V1.3 章节：4.1-4.8、20.1、21（A-1..A-6）"
+cases:
+  - id: "trigger-01-01"
+    label: 第一轮主动激活请求
+    scenario: 新会话第一轮，CCF 检测到自身可用，应主动向用户发起激活请求，无需显式命令。
+    preconditions:
+      - 会话处于第一轮
+      - 平台支持第一轮主动输出
+      - activation.json 中状态为 NOT_PROMPTED
+    steps:
+      - 用户发出第一轮输入（任意内容）
+      - 观察 CCF 首轮输出
+    expected:
+      - 输出包含头部 "YESTEST // ACTIVATION // REQUEST"
+      - 输出包含内部设定公司名与激活说明
+      - 输出包含许可声明 AGPL-3.0
+      - 输出包含回复选项 activate 与 decline
+      - 事件日志新增 ACTIVATION_PROMPTED
+    acceptance:
+      - "A-1"
+  - id: "trigger-01-02"
+    label: 激活请求仅出现一次
+    scenario: 激活请求发出后，在同一会话内不应重复出现，无论后续用户输入什么。
+    preconditions:
+      - 已发出第一轮激活请求
+      - 用户尚未回复 activate
+    steps:
+      - 用户在第一轮之后继续输入普通内容
+      - 观察后续轮次输出中是否再次出现激活请求
+    expected:
+      - 第二轮及后续轮次不出现 "YESTEST // ACTIVATION // REQUEST"
+      - 不重复登记 ACTIVATION_PROMPTED 事件
+    acceptance:
+      - "A-2"
+  - id: "trigger-01-03"
+    label: 回复 activate 进入 BOOTSTRAP
+    scenario: 用户回复 activate 后，CCF 确认激活并进入启动协议。
+    preconditions:
+      - 已发出激活请求
+    steps:
+      - 用户回复 activate
+      - 观察 CCF 输出与状态文件变化
+    expected:
+      - 输出 "YESTEST // ACTIVATION // CONFIRMED"
+      - 进入 CCF::BOOTSTRAP，按阶段 0 至 7 依次执行
+      - activation.json 中 state 变为 ACTIVE
+      - run.json 中 active 为 true
+      - 事件日志新增 ACTIVATION_CONFIRMED
+    acceptance:
+      - "A-3"
+  - id: "trigger-01-04"
+    label: 回复 decline 后不再提示
+    scenario: 用户明确拒绝激活后，本会话不再主动提示、不进入 CCF 协议，仅可被显式命令重新激活。
+    preconditions:
+      - 已发出激活请求
+    steps:
+      - 用户回复 decline
+      - 观察输出与后续轮次行为
+    expected:
+      - 输出 "YESTEST // ACTIVATION // DECLINED"
+      - activation.json 中 state 变为 DECLINED
+      - 事件日志新增 ACTIVATION_DECLINED
+      - 后续轮次不出现 CCF 相关提示，不进入 CCF 协议，按普通模式处理
+    acceptance:
+      - "A-4"
+  - id: "trigger-01-05"
+    label: 其他文本按 decline 处理
+    scenario: 用户第一轮直接输入任务内容而未回复激活选项，应为 decline 语义：任务被正常回答，不再提示。
+    preconditions:
+      - 已发出激活请求
+    steps:
+      - 用户第一轮回复自定义文本（如直接描述任务）
+      - 观察处理结果
+    expected:
+      - 自定义文本不触发 CCF 协议，任务按普通模式正常回答
+      - 记录 ACTIVATION_DECLINED 事件
+      - 本会话后续轮次不再出现激活请求
+    acceptance:
+      - "A-5"
+  - id: "trigger-01-06"
+    label: /ccf start 显式激活
+    scenario: 用户通过显式命令激活时，跳过激活请求，直接进入 BOOTSTRAP。
+    preconditions:
+      - CCF 已安装且可用
+    steps:
+      - 用户输入 /ccf start
+      - 观察输出
+    expected:
+      - 输出中不出现 "YESTEST // ACTIVATION // REQUEST"
+      - 直接进入 CCF::BOOTSTRAP
+      - 事件日志新增 ACTIVATION_EXPLICIT
+    acceptance:
+      - "A-6"
+  - id: "trigger-01-07"
+    label: 等价显式激活命令与文本
+    scenario: 多组显式激活入口应等价跳转 BOOTSTRAP。
+    preconditions:
+      - CCF 已安装且可用
+    steps:
+      - 依次输入 /yestest start、调用弈策集团、调用 Cognitivecomputing_firm
+      - 分别观察输出
+    expected:
+      - 每个入口均跳过激活请求，直接进入 CCF::BOOTSTRAP
+      - 每个入口均记录 ACTIVATION_EXPLICIT 事件
+    acceptance:
+      - "A-6"
+  - id: "trigger-01-08"
+    label: decline 后可由显式命令重新激活
+    scenario: decline 后本会话不再主动提示，但显式命令仍可重新激活。
+    preconditions:
+      - 本会话已 decline
+      - activation.json 中 state 为 DECLINED
+    steps:
+      - 用户输入 /ccf start
+      - 观察输出
+    expected:
+      - 重新进入 CCF::BOOTSTRAP
+      - activation.json 中 state 变为 ACTIVE
+      - 激活后后续轮次按 CCF 协议执行
+    acceptance:
+      - "A-4"
+      - "A-6"
+  - id: "trigger-01-09"
+    label: /ccf stop 终止
+    scenario: 终止指令触发 CCF::TERMINATE，输出结项信息并释放状态锁。
+    preconditions:
+      - CCF 已激活
+      - 状态为 ACTIVE
+    steps:
+      - 用户输入 /ccf stop
+      - 观察输出与状态
+    expected:
+      - 输出结项报告、决策日志、工件索引、审计摘要
+      - 释放状态锁
+      - activation.json 中 state 变为 TERMINATED
+      - 事件日志记录终止事件
+    acceptance:
+      - "A-18"
+  - id: "trigger-01-10"
+    label: 平台不支持首轮主动输出时降级
+    scenario: 平台不支持第一轮主动输出时，降级为显式命令激活，不阻塞会话。
+    preconditions:
+      - 平台无法在第一轮主动输出
+    steps:
+      - 用户发出第一轮输入
+      - 观察 CCF 行为
+    expected:
+      - 不输出激活请求，记录 ACTIVATION_SKIPPED 事件
+      - 会话继续按普通模式运行
+      - 用户使用 /ccf start 仍可激活
+    acceptance:
+      - "A-1"
+# YESTEST // trigger // V1.3 // G0

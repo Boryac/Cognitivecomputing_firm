@@ -1,0 +1,22 @@
+# Integration template (assets/integration.template.yaml)
+# 约定：grill-me 联动状态与调用记录（PRD 5.2.8）。
+grill_me:
+  installed: false
+  version: null
+  license: "see grill-me repository"
+  probed_at: "ISO8601 | null"
+  decision: "null | installed | declined | later | install_pending | install_failed | unconfirmed | disabled"
+  install:
+    command: "npx skills add mattpocock/skills/grill-me"
+    prompted_at: "ISO8601 | null"
+    user_reply: "null | done | failed | skip"
+    reprobed: false
+    reprobe_result: "null | found | not_found"
+  calls:
+    - call_id: "IG-0001"
+      ticket_id: "T-001"
+      artifact_id: "A-001"
+      timestamp: "ISO8601"
+      result: "ok | failed"
+      findings_ref: "events/events.jsonl#EV-000123"
+  failed_streak: 0
