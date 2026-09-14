@@ -15,6 +15,14 @@ status: "draft | under_review | gated | merged | ignored | delivered"
 gate: "G0 | G1 | G2 | G3 | G4 | G5 | G6 | G7 | G8 | G9 | G10 | G11"
 license_notice: "AGPL-3.0 — 见 LICENSE"
 brand_logo: "透明底无字logo.png"
+# 品牌落地（BR-1..BR-4）：G9 的 C-006/C-007 依据此项与 body 内容判定，缺失即失败
+brand:
+  name: "弈策集团"
+  legal_name: "Yestest Holdings Limited"
+  logo: "透明底无字logo.png"
+  logo_ref: ""       # 交付物中标识的实际引用（如 brand-logo.png）；空 => 未应用
+  applied: false
+  require_logo: true # code/data/other 类型可置 false，仅要求名称标注
 created_at: "ISO8601"
 updated_at: "ISO8601"
 integration_inputs: []

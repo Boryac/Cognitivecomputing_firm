@@ -15,6 +15,8 @@ import sys
 
 from ccf_state import (format_id, load_template, now_iso, read_json_file,
                        resolve_root, state_file_path, write_json_file)
+from ccf_brand import (BRAND_LEGAL, BRAND_NAME, LOGO_SOURCE,
+                       check_text as brand_check_text)
 
 TYPES = ("document", "spreadsheet", "presentation", "code", "image", "data",
          "video_audio", "app_service", "mixed", "other")
@@ -124,10 +126,26 @@ def make_delivery(artifact_type: str, run_id: str, ticket_id: str,
             "note": "",
         },
         "license_notice": "AGPL-3.0 — 见 LICENSE；来源与许可声明保留",
-        "brand_logo": "透明底无字logo.png",
+        "brand_logo": LOGO_SOURCE,
+        "brand": {
+            "name": BRAND_NAME,
+            "legal_name": BRAND_LEGAL,
+            "logo": LOGO_SOURCE,
+            "logo_ref": opts.get("logo_ref", "") or "",
+            "applied": bool(opts.get("logo_ref")),
+        },
         "delivered_at": None,
         "version": 1,
     }
+
+    # 品牌落地校验（BR-1..BR-4）：有正文时给出可判定结论，供 G9 交付门复用
+    brand_body = opts.get("brand_body")
+    if brand_body is not None:
+        bc = brand_check_text(brand_body, artifact_type)
+        rec["brand_check"] = bc
+        rec["brand"]["applied"] = bool(bc["passed"])
+        if not rec["brand"]["logo_ref"] and bc["logo_refs"]:
+            rec["brand"]["logo_ref"] = bc["logo_refs"][0]
 
     # 许可声明检查
     lic = check_license_notice(opts.get("license_notice", rec["license_notice"]))
@@ -197,6 +215,8 @@ def build_parser():
     p.add_argument("--conversion-status", default="ok", choices=("ok", "failed", "fallback"),
                    help="格式转换结果")
     p.add_argument("--license-notice", default=None, help="许可声明文本（校验用）")
+    p.add_argument("--logo-ref", default="", help="交付物中标识的引用路径（空则记为未应用）")
+    p.add_argument("--body-file", default=None, help="交付物正文文件（用于品牌落地校验）")
     p.add_argument("--delivery-id", default=None)
     p.add_argument("--save", action="store_true", help="写 state/deliveries.json")
     return p
@@ -209,6 +229,10 @@ def main(argv=None) -> int:
         if cls["ask_user"] and args.type is None:
             pass  # 类型识别结果继续，note 中提示询问（D-5）
         artifact_ids = [s.strip() for s in args.artifact_ids.split(",") if s.strip()]
+        brand_body = None
+        if args.body_file:
+            with open(args.body_file, "r", encoding="utf-8") as fh:
+                brand_body = fh.read()
         seq = 1
         if args.save and args.state_dir:
             prev = read_json_file(state_file_path(args.state_dir, "deliveries.json"))
@@ -218,19 +242,27 @@ def main(argv=None) -> int:
             "latex": args.latex, "pdf": args.pdf, "word": args.word,
             "used_skill": args.used_skill, "conversion_status": args.conversion_status,
             "license_notice": args.license_notice, "delivery_id": args.delivery_id,
+            "logo_ref": args.logo_ref, "brand_body": brand_body,
         })
-        if args.save:
+        bc = rec.get("brand_check")
+        brand_ok = None if bc is None else bool(bc["passed"])
+        refused = brand_ok is False
+        saved = False
+        if args.save and not refused:
             records = read_json_file(state_file_path(args.state_dir, "deliveries.json"))
             if not isinstance(records, list):
                 records = []
             records.append(rec)
             write_json_file(state_file_path(args.state_dir, "deliveries.json"), records)
+            saved = True
         report = {"report": "delivery", "classification": cls, "delivery": rec,
-                  "saved": args.save}
+                  "saved": saved, "brand_ok": brand_ok, "refused": refused,
+                  "passed": not refused,
+                  "message": "品牌未落地：交付被拒绝（BR-1），先执行 ccf_brand.py block" if refused else ""}
     except (OSError, ValueError) as exc:
-        report = {"report": "delivery-error", "ok": False, "message": str(exc)}
+        report = {"report": "delivery-error", "ok": False, "passed": False, "message": str(exc)}
     print(json.dumps(report, ensure_ascii=False, indent=2))
-    return 0 if report.get("ok", True) else 1
+    return 0 if report.get("passed", report.get("ok", True)) else 1
 
 
 if __name__ == "__main__":

@@ -1,5 +1,5 @@
 name: cognitivecomputing-firm
-version: 1.4.0
+version: 1.4.1
 description: CCF. 弈策集团公司化多角色工作流引擎。会话内持续、工单驱动、门禁交付、风格统一、可审计可回滚。
 author: Yestest Holdings Limited
 license: AGPL-3.0
@@ -14,8 +14,18 @@ brand:
   legal_name: Yestest Holdings Limited
   tagline: ""
   logo: 透明底无字logo.png
+  logo_ref_name: brand-logo.png
   logo_use: "文档封面与交付物页眉；无字标识，不附加标语或署名"
   etymology: "弈=全局推演；策=先定后动；Yestest=Yes+Test 先验后认；Holdings Limited=集团化有限追责"
+  # 运行期品牌落地规则与强制手段（brand.md 5.1）
+  rules: [BR-1, BR-2, BR-3, BR-4, BR-5, BR-6]
+  enforcement:
+    turn_step: 11            # TURN 步 11 BRAND（不可跳过）
+    gate: G9                 # 交付门
+    checks: [C-006, C-007]   # 品牌标识已应用 / 公司名称已标定
+    script: scripts/ccf_brand.py
+    deliver_fail_closed: true  # 品牌未落地时交付被拒绝（退出码非零）
+  # 6.1 包内静态覆盖（11 处）
   coverage:
     - SKILL.md
     - manifest.yaml
@@ -28,6 +38,17 @@ brand:
     - assets/delivery.template.yaml
     - assets/gate-report.template.yaml
     - CHANGELOG.md
+  # 6.2 运行期交付物覆盖（每轮，由 G9 强制）
+  runtime_coverage:
+    - 文档封面与页眉
+    - 结项报告
+    - H 点简报（H1-H4）
+    - 审计包与归档包
+    - 门禁报告
+    - 激活请求与激活确认
+    - 每轮常规输出
+    - 交付记录
+    - code/data 类（名称标注）
 
 activation:
   mode: first_turn_prompt
@@ -197,6 +218,7 @@ scripts:
   - scripts/ecosystem_scanner.py
   - scripts/skill_orchestrator.py
   - scripts/ccf_deliver.py
+  - scripts/ccf_brand.py
   - scripts/ccf_adapt.py
   - scripts/individual_router.py
 
@@ -228,5 +250,6 @@ evals:
   - evals/integration.yaml
   - evals/ecosystem.yaml
   - evals/delivery.yaml
+  - evals/brand.yaml
   - evals/learning.yaml
   - evals/differential.yaml

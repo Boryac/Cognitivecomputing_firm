@@ -2,7 +2,7 @@
 name: cognitivecomputing-firm
 description: 弈策集团（Yestest Holdings Limited）公司化多角色工作流引擎。将每次输入登记为工单，按固定职能、角色、个人、流程、门禁与风格法执行，产出可审计、可回滚的结果。Use when the user wants a company-style multi-role workflow, gate-checked deliverables, auditable and rollback-capable engineering output, structured PRD/DOCX/PDF production, or invokes 弈策集团 / Yestest / CCF / /ccf.
 license: AGPL-3.0
-version: "1.4.0"
+version: "1.4.1"
 compatibility: Requires Python 3.10+ to run the scripts/ runtime and file read/write for run_state/ persistence. Designed for Claude Code, Codex, and WorkBuddy.
 allowed-tools: Read Write Edit Bash Glob Grep
 metadata:
@@ -18,7 +18,16 @@ metadata:
 ![弈策集团标识](透明底无字logo.png)
 
 > **品牌标识**：包根目录 `透明底无字logo.png`（透明底、无字；中心节点与四角节点辐射相连）。
-> **使用场景**：文档封面、交付物页眉、结项报告、H 点简报、审计包、激活请求、门禁报告。
+>
+> **强制规则 BR-1**：**每个对外交付物与每轮常规输出都必须带品牌块** —— 标识 + 公司名称
+> `弈策集团（Yestest Holdings Limited）`。这不是建议：它是 G9 交付门的检查项
+> C-006（品牌标识已应用）与 C-007（公司名称已标定），缺失即门禁失败、不得交付。
+>
+> **生成方式（不要手写）**：
+> `python scripts/ccf_brand.py block --format md --out-dir <交付物目录>`
+> 该命令输出可直接粘贴的品牌块，并把标识复制为 ASCII 名 `brand-logo.png`，
+> 规避中文文件名在 LaTeX / DOCX 管线中的解析问题。
+>
 > **使用边界**：无字标识不附加标语或署名（与表达约束 E-9 一致）。完整规范见 `references/brand.md`。
 
 ## 0. 公司概览（弈策集团 · Yestest Holdings Limited）
@@ -53,7 +62,7 @@ Copyright and license notices must be preserved.
 | 平台 | 落地方式 |
 | --- | --- |
 | Claude Code | `.claude/commands/ccf.md` 斜杠命令 + `user-invokable`（用户键入 `/ccf start`） |
-| WorkBuddy | SessionStart / UserPromptSubmit hook 或 automation（见 `platform/workbuddy-hook.md`） |
+| WorkBuddy | SessionStart / UserPromptSubmit hook 或 automation（见 `platform/workbuddy.md`） |
 | Codex | AGENTS.md 引用（见 `platform/codex.md`） |
 
 激活请求格式：
@@ -97,7 +106,7 @@ YESTEST // ACTIVATION // REQUEST
 
 ## 3. Runtime — 脚本接线协议（本 Skill 的执行层）
 
-CCF 的执行层由 `scripts/` 下 11 个 Python 脚本构成。**每个阶段必须调用对应脚本**，脚本读写 `run_state/` 的状态文件；模型负责编排与产出内容，脚本负责状态、门禁、风格、协同与交付的确定性。完整调用清单、参数与顺序见 `references/runbook.md`。
+CCF 的执行层由 `scripts/` 下 12 个 Python 脚本构成。**每个阶段必须调用对应脚本**，脚本读写 `run_state/` 的状态文件；模型负责编排与产出内容，脚本负责状态、门禁、风格、品牌、协同与交付的确定性。完整调用清单、参数与顺序见 `references/runbook.md`。
 
 CCF::BOOTSTRAP 阶段：
 
@@ -126,15 +135,23 @@ CCF::TURN 步骤：
 | 8 | VERIFY | `python scripts/style_lint.py --input-file <artifact> --expression` |
 | 9 | GATE | `python scripts/gate_runner.py --artifact <json> --save` |
 | 10 | INTEGRATE | 合并 artifacts（上下文内） |
-| 11 | DELIVER | `python scripts/ccf_deliver.py --describe "<产物描述>" --save` |
-| 12 | LEARN | `python scripts/ccf_adapt.py add --type … --level …` |
-| 13 | COMMIT | `python scripts/ccf_state.py checkpoint --reason commit`；`python scripts/ccf_state.py event --name …` |
+| 11 | BRAND | `python scripts/ccf_brand.py block --format md --out-dir "<交付物目录>"`；`python scripts/ccf_brand.py check --input-file <交付物>` |
+| 12 | DELIVER | `python scripts/ccf_deliver.py --describe "<产物描述>" --body-file <交付物> --logo-ref brand-logo.png --save` |
+| 13 | LEARN | `python scripts/ccf_adapt.py add --type … --level …` |
+| 14 | COMMIT | `python scripts/ccf_state.py checkpoint --reason commit`；`python scripts/ccf_state.py event --name …` |
+
+> **步 11 BRAND 不可跳过**：它把品牌块写进交付物，并把标识复制为 ASCII 名。
+> 品牌在链路中有三道关口：① EXECUTE 产出的 artifact 正文须已含品牌块 —— 由步 9 的
+> G9 检查项 C-006/C-007 判定；② 步 11 落位标识；③ 步 12 `ccf_deliver.py --body-file`
+> 对正文做实测，`brand_check.passed=false` 时**直接拒绝交付**（退出码非零）。
+> `ccf_brand.py check` 返回 `passed=false` 即表示品牌未落地，先修好再进入步 12。
 
 CCF::TERMINATE：`python scripts/ccf_state.py event --name TERMINATED` → `python scripts/ccf_state.py checkpoint --reason terminate`。
 
-常规输出格式：
+常规输出格式（**首行品牌块不可省略**，BR-1）：
 
 ```
+弈策集团（Yestest Holdings Limited） · cognitivecomputing-firm
 YESTEST // RUN-ID // PHASE // GATE
 结论：
 依据：
@@ -142,7 +159,7 @@ YESTEST // RUN-ID // PHASE // GATE
 下一步：
 ```
 
-内部公司：弈策集团（Yestest Holdings Limited）。品牌标识：`透明底无字logo.png`。用户为董事会，CCO 为唯一对外接口。任何角色或个人不得审批自己的工作。
+内部公司：弈策集团（Yestest Holdings Limited）。品牌标识：`透明底无字logo.png`（交付物内引用名 `brand-logo.png`）。用户为董事会，CCO 为唯一对外接口。任何角色或个人不得审批自己的工作。
 
 ## 4. Ecosystem — 多 Skill 协同
 
@@ -270,4 +287,4 @@ H 点暂停并等待人工决策。
 
 ---
 
-YESTEST // SKILL // V1.4.0 // G0
+YESTEST // SKILL // V1.4.1 // G0

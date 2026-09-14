@@ -3,6 +3,46 @@
 All notable changes to cognitivecomputing-firm (CCF) are documented in
 this file. Format follows Keep a Changelog conventions.
 
+## [1.4.1] - 2026-09-14
+
+修复"品牌（标识 + 公司名称）在实际使用时经常被遗忘"的结构性问题。
+
+**根因**：品牌此前只作为**惰性加载的文档规范**（`references/brand.md`，BOOTSTRAP 阶段加载）
+与**被动字段**（恒为固定字符串）存在 —— 既不在常驻上下文中，也无门禁可判定，
+TURN 13 步里更没有任何品牌步骤。本次把品牌提升为**强制步骤 + 可判定门禁 + 脚本化落地**。
+
+### Added
+
+- `scripts/ccf_brand.py`：品牌落地工具（第 12 个脚本）。
+  - `block`：生成标准品牌块（text/md/latex）；带 `--out-dir` 时把标识复制为 ASCII 名
+    `brand-logo.png`，规避中文文件名在 LaTeX / DOCX 管线中的解析问题。
+  - `check`：扫描交付物正文，判定标识引用与公司名称是否落地（可判定，非自报）。
+  - `logo`：校验标识文件（存在性、尺寸、透明通道、SHA-256）。
+- `evals/brand.yaml`：10 条品牌落地验收用例（brand-01-01..brand-01-10）。
+- `references/brand.md` 新增 5.1 节「运行期品牌落地规则 BR-1..BR-6」与 6.2 节
+  「运行期交付物覆盖清单」；`assets/` 三份模板新增 `brand` 块与 `brand_check` 字段。
+
+### Changed
+
+- **SKILL.md**：顶部新增强制条款 BR-1（让品牌进入常驻上下文）；TURN 步骤表插入
+  步 11 BRAND（DELIVER / LEARN / COMMIT 顺延为 12 / 13 / 14）；常规输出格式首行加入
+  品牌块；脚本数量 11 → 12；`references/brand.md` 增加 TURN 步 11 回查要求。
+- **G9 交付门**：新增检查项 C-006（品牌标识已应用）与 C-007（公司名称已标定）。
+  `gate_runner._auto_check` 为品牌关键字提供**真实判定**，不再落入"默认通过（无反证）"。
+- **ccf_deliver.py**：`brand` 由硬编码常量改为实测值（`applied` / `logo_ref`）；
+  新增 `--body-file` 与 `--logo-ref`；品牌未落地时**拒绝交付**（fail-closed，退出码非零）。
+- `references/runbook.md` 与 `references/workflow.md`：TURN 序列与步骤表同步。
+- `references/charter.md`：§1.1 声明品牌落地由 G9 强制。
+
+### Fixed
+
+- **标识图片失效链接**：`references/charter.md` 的 `../../透明底无字logo.png` 多退一级目录，
+  实际应为 `../透明底无字logo.png`。
+- **悬空引用**：`platform/workbuddy-hook.md` 不存在（实际文件为 `platform/workbuddy.md`），
+  见 SKILL.md 与 `references/runbook.md`。
+- **品牌字段失真**：`brand_logo` 恒为固定字符串，无论是否真的贴了标识都"正确"，
+  无法作为校验依据。
+
 ## [1.4.0] - 2026-09-13
 
 品牌标识在包内多处登记：SKILL.md、manifest.yaml、README.md、PRD.md、

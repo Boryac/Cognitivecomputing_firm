@@ -58,7 +58,7 @@ CCF 是一款公司化多角色工作流技能。激活后，每次用户输入�
 | 规范层 | `references/` | 宪章、组织、门禁、风格、交付、学习等规则 |
 | 执行层 | `scripts/` | 状态、路由、校验、门禁、风格、协同、交付、适配 |
 | 数据契约层 | `assets/` | run / ticket / microtask / artifact / gate-report 等模板 |
-| 验收层 | `evals/` | 10 组验收用例 |
+| 验收层 | `evals/` | 11 组验收用例 |
 | 平台适配层 | `.claude/commands/`、`platform/` | 首轮提示与斜杠命令的跨平台落地 |
 
 ### 3.2 目录结构
@@ -71,9 +71,9 @@ cognitivecomputing-firm/
 ├── LICENSE / COPYING / NOTICE / AUTHORS / CHANGELOG.md
 ├── 透明底无字logo.png   品牌标识
 ├── references/         规则文档（含 brand.md、runbook.md）
-├── scripts/            11 个可执行脚本
+├── scripts/            12 个可执行脚本
 ├── assets/             9 份数据契约模板
-├── evals/              10 组验收用例
+├── evals/              11 组验收用例
 ├── platform/           平台适配说明
 └── .claude/commands/   Claude Code 斜杠命令
 ```
@@ -82,8 +82,8 @@ cognitivecomputing-firm/
 
 | 文件 | 加载时机 |
 | --- | --- |
-| `references/runbook.md` | BOOTSTRAP 阶段 0（执行层接线，必需） |
-| `references/brand.md` | BOOTSTRAP 阶段 1 |
+| `references/runbook.md` | BOOTSTRAP 阶段 0（执行层接线，必需）；TURN 各步按需回查 |
+| `references/brand.md` | BOOTSTRAP 阶段 1；**TURN 步 11（BRAND）必须回查**——BR-1 已同步写入 SKILL.md 顶部，保证品牌进入常驻上下文 |
 | `references/charter.md` | BOOTSTRAP 阶段 2 |
 | `references/style.md` | BOOTSTRAP 阶段 4 |
 | `references/gates.md` | GATE 阶段 |
@@ -351,7 +351,7 @@ AP-1 全局约束先于职能与个人约束；AP-2 冲突时以全局约束为�
 
 ### 10.2 门规则
 
-GR-1 检查清单；GR-2 校验流程；GR-3 失败回退；GR-4 不过门不交付；GR-5 一票否决；GR-6 连续 3 次失败触发 H4；GR-7 grill-me 输出作为 G7/G8 补充输入；GR-8 differential_findings 作为 G7/G8 补充输入；GR-9 G5/G9 检查 AGPL-3.0 与来源声明；GR-10 协同输出仅作补充输入、无否决权；GR-11 G11 拦截突破核心边界的适配。
+GR-1 检查清单；GR-2 校验流程；GR-3 失败回退；GR-4 不过门不交付；GR-5 一票否决；GR-6 连续 3 次失败触发 H4；GR-7 grill-me 输出作为 G7/G8 补充输入；GR-8 differential_findings 作为 G7/G8 补充输入；GR-9 G5/G9 检查 AGPL-3.0 与来源声明；GR-10 协同输出仅作补充输入、无否决权；GR-11 G11 拦截突破核心边界的适配；GR-12 G9 强制品牌检查（C-006 品牌标识已应用、C-007 公司名称已标定），该两项**必须给出明确判定，不得落入"默认通过（无反证）"**，判定依据为 artifact 正文的标识引用与公司名称（BR-1..BR-4）。
 
 ### 10.3 门禁执行算法
 
@@ -363,9 +363,10 @@ GR-1 检查清单；GR-2 校验流程；GR-3 失败回退；GR-4 不过门不交
 4. 每门：跑校验、跑清单、收集否决意见
 5. G7/G8 附加读取 grill-me 输出、协同输出与 differential_findings
 6. G5/G9 附加读取许可声明与来源声明
-7. G11 附加校验学习适配合规性
-8. 若否决 → 记录 + 回退
-9. 全过 → 下一阶段
+7. G9 附加校验品牌落地：正文标识引用（C-006）与公司名称（C-007），不可判定即判失败
+8. G11 附加校验学习适配合规性
+9. 若否决 → 记录 + 回退
+10. 全过 → 下一阶段
 ```
 
 ---
@@ -513,7 +514,7 @@ A-1 第一轮激活请求；A-2 请求仅一次；A-3 activate 进入 BOOTSTRAP�
 | A-21 | 事件日志 append-only |
 | A-22 | 表达约束 0 违规 |
 
-完整用例见 `evals/` 下 10 组文件。
+完整用例见 `evals/` 下 11 组文件。
 
 ---
 
@@ -545,7 +546,23 @@ A-1 第一轮激活请求；A-2 请求仅一次；A-3 activate 进入 BOOTSTRAP�
 
 ### 23.1 品牌与标识
 
-见 `references/brand.md`：名称释义、专业性宪章（PF-1..PF-4）、标识使用规范（LG-1..LG-6）与标识覆盖清单（11 处）。
+见 `references/brand.md`：名称释义、专业性宪章（PF-1..PF-4）、标识使用规范（LG-1..LG-8）、
+包内静态覆盖清单（11 处）与运行期交付物覆盖清单。
+
+**运行期品牌落地需求（BR-1..BR-6）** —— 品牌不得只作为文档规范存在，必须进入执行链：
+
+| 编号 | 需求 | 验收标准 |
+| --- | --- | --- |
+| BR-1 | 每个对外交付物与每轮常规输出必须带品牌块（标识 + 公司名称） | G9 的 C-006/C-007 通过 |
+| BR-2 | 交付物正文必须含标识引用（`brand-logo.png` 或 `透明底无字logo.png`） | `ccf_brand.py check` → `logo_found=true` |
+| BR-3 | 交付物正文必须标注 `弈策集团` 或 `Yestest Holdings Limited` | `name_found=true` |
+| BR-4 | 品牌状态可判定、不自报、不依赖常量 | `ccf_deliver.py` 写入实测 `brand_check` |
+| BR-5 | `code` / `data` / `other` 类型只要求名称标注，不强制图片标识 | `brand.require_logo=false` 时不判缺标识 |
+| BR-6 | 交付物内 `brand-logo.png` 与包内 `透明底无字logo.png` 同哈希 | `ccf_brand.py logo` 输出 SHA-256 |
+
+落地手段：脚本 `scripts/ccf_brand.py`（`block` / `check` / `logo`）；TURN 步 11（BRAND）；
+G9 交付门检查项 C-006（品牌标识已应用）与 C-007（公司名称已标定）；
+交付步骤 `ccf_deliver.py --body-file` 做正文实测，品牌未落地即拒绝交付（退出码非零）。
 
 ### 23.2 执行层接线
 

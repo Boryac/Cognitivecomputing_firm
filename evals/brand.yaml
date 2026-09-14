@@ -1,0 +1,139 @@
+eval_id: brand-01
+title: 运行期品牌落地测试
+target: scripts/ccf_brand.py
+source: "PRD V1.4 章节：3.3、10.2（GR-12）、23.1（BR-1..BR-6）"
+cases:
+  - id: "brand-01-01"
+    label: 标识文件校验
+    scenario: 包根标识存在、为带透明通道的 PNG、尺寸正确。
+    preconditions:
+      - 技能包完整
+    steps:
+      - 运行 ccf_brand.py logo
+    expected:
+      - exists 为 true，width/height 均大于 0
+      - has_alpha 为 true（color_type 为 4 或 6）
+      - 输出 SHA-256 与发布基线一致
+    acceptance:
+      - "BR-6"
+  - id: "brand-01-02"
+    label: 品牌块生成与标识就位
+    scenario: block 生成可直接粘贴的品牌块，并把标识复制为 ASCII 名。
+    preconditions:
+      - 指定交付物目录
+    steps:
+      - 运行 ccf_brand.py block --format md --out-dir <交付物目录>
+    expected:
+      - 输出含标识引用 brand-logo.png
+      - 输出含公司名称 弈策集团（Yestest Holdings Limited）
+      - 交付物目录内生成 brand-logo.png，与包内标识同哈希
+    acceptance:
+      - "BR-2"
+      - "BR-6"
+  - id: "brand-01-03"
+    label: 正文缺失品牌 → 检出 violation
+    scenario: 交付物正文既无标识引用也无公司名时，check 判定不通过。
+    preconditions:
+      - 正文不含标识引用与公司名称
+    steps:
+      - 运行 ccf_brand.py check --input-file <正文>
+    expected:
+      - passed 为 false
+      - violations 同时含 BR-2（缺标识引用）与 BR-3（缺公司名称）
+      - name_found、logo_found 均为 false
+    acceptance:
+      - "BR-2"
+      - "BR-3"
+  - id: "brand-01-04"
+    label: 正文含品牌 → 通过
+    scenario: 正文含标识引用与公司名时，check 判定通过。
+    preconditions:
+      - 正文含 ![弈策集团](brand-logo.png) 与公司名称
+    steps:
+      - 运行 ccf_brand.py check --input-file <正文>
+    expected:
+      - passed 为 true
+      - logo_found 为 true，logo_refs 含 brand-logo.png
+    acceptance:
+      - "BR-1"
+      - "BR-2"
+      - "BR-3"
+  - id: "brand-01-05"
+    label: G9 拦截无品牌交付物
+    scenario: G9 交付门对无品牌 artifact 判失败，且不落入"默认通过（无反证）"。
+    preconditions:
+      - artifact 正文无品牌且未标 brand.applied
+    steps:
+      - 运行 gate_runner.py --artifact <artifact> --artifact-type deliverable --gates G9
+    expected:
+      - C-006（品牌标识已应用）passed 为 false
+      - C-007（公司名称已标定）passed 为 false
+      - 门结果为 fail，退出码非零
+    acceptance:
+      - "BR-1"
+      - "GR-12"
+  - id: "brand-01-06"
+    label: G9 放行已品牌交付物
+    scenario: artifact 正文已含品牌块时 G9 通过。
+    preconditions:
+      - artifact 正文含标识引用与公司名称
+    steps:
+      - 运行 gate_runner.py --artifact <artifact> --artifact-type deliverable --gates G9
+    expected:
+      - C-006、C-007 均 passed 为 true
+      - 门结果为 pass
+    acceptance:
+      - "BR-1"
+  - id: "brand-01-07"
+    label: 交付步骤 fail-closed
+    scenario: 品牌未落地时 ccf_deliver 拒绝交付，不再静默通过。
+    preconditions:
+      - 交付物正文无品牌
+    steps:
+      - 运行 ccf_deliver.py --body-file <正文> --save
+    expected:
+      - brand_check.passed 为 false
+      - refused 为 true，saved 为 false
+      - 退出码非零
+    acceptance:
+      - "BR-4"
+  - id: "brand-01-08"
+    label: brand.applied 为实测值而非常量
+    scenario: 交付记录的 brand.applied 依据正文实测，不依赖硬编码。
+    preconditions:
+      - 分别用有品牌与无品牌正文各交付一次
+    steps:
+      - 运行 ccf_deliver.py --body-file <有品牌正文>
+      - 运行 ccf_deliver.py --body-file <无品牌正文>
+    expected:
+      - 前者 brand.applied 为 true 且 logo_ref 非空
+      - 后者 brand.applied 为 false
+      - 两次记录的 brand_check 结果不同
+    acceptance:
+      - "BR-4"
+  - id: "brand-01-09"
+    label: code/data 类只要求名称标注
+    scenario: code、data、other 类型不强制图片标识。
+    preconditions:
+      - artifact 类型为 code
+    steps:
+      - 运行 ccf_brand.py check --artifact-type code --input-file <含公司名的源码>
+    expected:
+      - require_logo 为 false
+      - 仅按 name_found 判定；含公司名即通过
+      - 不含公司名仍判失败（BR-3）
+    acceptance:
+      - "BR-5"
+  - id: "brand-01-10"
+    label: 每轮常规输出携带品牌块
+    scenario: 每轮 TURN 常规输出首行为品牌块。
+    preconditions:
+      - CCF 已激活
+    steps:
+      - 执行一轮 TURN 并观察输出
+    expected:
+      - 输出首行为 弈策集团（Yestest Holdings Limited） · cognitivecomputing-firm
+      - 品牌块之后才是 YESTEST // RUN-ID // PHASE // GATE 行
+    acceptance:
+      - "BR-1"
+# YESTEST // brand // V1.4 // G0

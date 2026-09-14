@@ -88,24 +88,30 @@ python scripts/individual_router.py \
 
 # 7 EXECUTE —— 各职能产出 artifacts 与 differential_findings
 
-# 8 VERIFY（风格 + 表达）
+# 8 VERIFY（风格 + 表达 + 品牌）
 python scripts/style_lint.py --input-file <artifact 文件> --theme light --expression
+python scripts/ccf_brand.py check --input-file <artifact 文件> --artifact-type document
 
-# 9 GATE
+# 9 GATE（G9 含品牌检查项 C-006 品牌标识已应用 / C-007 公司名称已标定）
 python scripts/gate_runner.py --state-dir run_state --artifact <artifact.json> \
     --artifact-type deliverable --save
 
 # 10 INTEGRATE —— 上下文内合并
 
-# 11 DELIVER
-python scripts/ccf_deliver.py --describe "<产物描述>" --run-id <RUN-ID> \
-    --ticket-id T-001 --artifact-ids A-001 --save
+# 11 BRAND（品牌落地：标识落位 + 公司名称；BR-1..BR-5，不可跳过）
+python scripts/ccf_brand.py block --format md --out-dir <交付物目录>
+python scripts/ccf_brand.py check --input-file <交付物>
 
-# 12 LEARN
+# 12 DELIVER（--body-file 做品牌实测；未落地则拒绝交付，退出码非零）
+python scripts/ccf_deliver.py --describe "<产物描述>" --run-id <RUN-ID> \
+    --ticket-id T-001 --artifact-ids A-001 \
+    --body-file <交付物> --logo-ref brand-logo.png --save
+
+# 13 LEARN
 python scripts/ccf_adapt.py add --type preference --description "…" --level D1 \
     --set theme_preference=dark
 
-# 13 COMMIT
+# 14 COMMIT
 python scripts/ccf_state.py checkpoint --reason commit
 python scripts/ccf_state.py event --name TURN_COMMITTED
 ```
@@ -127,7 +133,8 @@ python scripts/ccf_route.py route --input "/ccf stop"
 | `ccf_route.py` | 激活与命令路由 | `route --input`/`prompt`/`status`/`license` |
 | `ccf_validate.py` | 契约与权限校验 | `contract`/`run`/`permission --role --action` |
 | `ccf_adapt.py` | 画像与适配 | `view`/`add`/`rollback`/`reset` |
-| `ccf_deliver.py` | 交付分类与管线 | `--describe`/`--type`/`--confirm`/`--save` |
+| `ccf_deliver.py` | 交付分类与管线 | `--describe`/`--type`/`--confirm`/`--body-file`/`--logo-ref`/`--save` |
+| `ccf_brand.py` | 品牌落地（标识 + 公司名称） | `block --format --out-dir`/`check --input-file`/`logo` |
 | `gate_runner.py` | G0–G11 门禁 | `--artifact`/`--gates`/`--veto`/`--save` |
 | `style_lint.py` | 风格与表达检查 | `--input-file`/`--theme`/`--expression` |
 | `ecosystem_scanner.py` | 生态扫描 | `--skills-dir`/`--scope-json` |
@@ -142,7 +149,7 @@ python scripts/ccf_route.py route --input "/ccf stop"
 | 平台 | 落地方式 | 文件 |
 | --- | --- | --- |
 | Claude Code | 斜杠命令 + user-invokable | `.claude/commands/ccf.md` |
-| WorkBuddy | SessionStart / UserPromptSubmit hook 或 automation | `platform/workbuddy-hook.md` |
+| WorkBuddy | SessionStart / UserPromptSubmit hook 或 automation | `platform/workbuddy.md` |
 | Codex | AGENTS.md 引用 | `platform/codex.md` |
 
 三者的等价触发入口：`/ccf start`、`/yestest start`、`调用弈策集团`、`调用 cognitivecomputing-firm`。

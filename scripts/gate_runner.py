@@ -15,6 +15,7 @@ import sys
 
 from ccf_state import (append_event, load_template, now_iso, read_json_file,
                        state_file_path, write_json_file)
+from ccf_brand import check_text as brand_check_text
 from style_lint import find_expression_violations, lint_text
 
 GATES = [
@@ -37,7 +38,8 @@ GATES = [
     {"id": "G8", "name": "QA 门", "veto_owner": "QA Lead", "fallback": "re_execute",
      "checks": ["验收逐条核对", "追溯链完整", "寻差发现已读取", "协同校验输出已读取"]},
     {"id": "G9", "name": "交付门", "veto_owner": "CCO", "fallback": "re_execute",
-     "checks": ["产物完整", "可执行性已确认", "表达合规", "许可合规", "交付格式已确认"]},
+     "checks": ["产物完整", "可执行性已确认", "表达合规", "许可合规", "交付格式已确认",
+                "品牌标识已应用", "公司名称已标定"]},
     {"id": "G10", "name": "归档门", "veto_owner": "Archivist Lead", "fallback": "re_execute",
      "checks": ["记忆已写入", "版本已标注", "审计包已产出"]},
     {"id": "G11", "name": "学习门", "veto_owner": "Learning Lead", "fallback": "rollback",
@@ -113,6 +115,25 @@ def _auto_check(gate_id: str, description: str, artifact: dict) -> dict | None:
     if "完整" in description:
         ok = bool(body.strip())
         return {"passed": ok, "evidence": "body 非空" if ok else "body 为空"}
+    # 品牌落地（BR-2 / BR-3）：必须给出明确判定，绝不落入"默认通过（无反证）"
+    brand = artifact.get("brand", {}) or {}
+    if "品牌" in description or "标识" in description:
+        atype = str(brand.get("artifact_type") or artifact.get("artifact_type")
+                    or artifact.get("type") or "document").lower()
+        rep = brand_check_text(body, atype, brand.get("require_logo"))
+        ok = bool(rep["logo_found"] if rep["require_logo"] else rep["name_found"])
+        if not ok:
+            ev = "未发现标识引用（BR-2）" if rep["require_logo"] else "缺少公司名称标注（BR-3）"
+        elif rep["require_logo"]:
+            ev = "标识已应用：%s" % ", ".join(rep["logo_refs"])
+        else:
+            ev = "该类型不要求图片标识，公司名称已标注"
+        return {"passed": ok, "evidence": ev}
+    if "公司名" in description:
+        rep = brand_check_text(body)
+        ok = bool(rep["name_found"])
+        return {"passed": ok,
+                "evidence": "公司名称已标注" if ok else "缺少公司名称标注（BR-3）"}
     return None
 
 

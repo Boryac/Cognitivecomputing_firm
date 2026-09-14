@@ -18,7 +18,7 @@
 - **外部协同（真实调用）**：与 grill-me 官方联动；多 Skill 生态扫描、分级推荐、统一调用协议，调用为真实执行（子进程或 outbox 回执），失败降级不阻塞主流程。
 - **自适配**：基于运行数据迭代用户画像（D0–D4 分级应用），核心规则置于黑名单不可自动修改。
 - **交付路由**：按产物类型自动匹配交付管线（文档默认 PDF，Word 需显式请求）。
-- **执行层脚本化**：11 个 Python 脚本承载状态、路由、门禁、风格、协同、交付与适配，接线协议见 `references/runbook.md`。
+- **执行层脚本化**：12 个 Python 脚本承载状态、路由、门禁、风格、品牌、协同、交付与适配，接线协议见 `references/runbook.md`。
 - **许可合规**：AGPL-3.0 分发，来源与许可声明全程保留。
 
 ## 首次使用（从 GitHub 到本地运行）
@@ -27,7 +27,7 @@
 
 | 依赖 | 用途 | 要求 |
 | --- | --- | --- |
-| Python 3.10+ | 运行 `scripts/` 下 11 个脚本 | 命令行可输入 `python3` 即可 |
+| Python 3.10+ | 运行 `scripts/` 下 12 个脚本 | 命令行可输入 `python3` 即可 |
 | Git | 拉取与后续更新 | 可选，ZIP 方式无需安装 |
 
 ### 拉取到本地
@@ -97,9 +97,9 @@ cognitivecomputing-firm/
 ├── LICENSE / COPYING / NOTICE / AUTHORS / CHANGELOG.md
 ├── 透明底无字logo.png   品牌标识
 ├── references/         19 份规则（含 brand.md 品牌、runbook.md 接线手册）
-├── scripts/            11 个可执行脚本（状态/路由/门禁/风格/协同/交付/适配）
+├── scripts/            12 个可执行脚本（状态/路由/门禁/风格/品牌/协同/交付/适配）
 ├── assets/             9 份数据契约模板
-├── evals/              10 组验收用例
+├── evals/              11 组验收用例
 ├── platform/           平台适配（Claude Code / WorkBuddy / Codex）
 └── .claude/commands/   Claude Code 斜杠命令
 ```
@@ -132,4 +132,4 @@ GNU Affero General Public License v3.0。全文见 [LICENSE](LICENSE)。按 AGPL
 
 ---
 
-YESTEST // README // V1.4.0 // G0
+YESTEST // README // V1.4.1 // G0

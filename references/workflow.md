@@ -189,13 +189,19 @@ CCF_ACTIVE = true 后：
 | 8 | VERIFY | artifacts、grill-me 输出、协同输出、differential_findings | verify_results | 回退 EXECUTE |
 | 9 | GATE | verify_results | gate_reports | 回退 EXECUTE |
 | 10 | INTEGRATE | artifacts | deliverable | 回退 GATE |
-| 11 | DELIVER | deliverable | final_output、交付确认 | 回退 INTEGRATE |
-| 12 | LEARN | 全轮数据、用户反馈 | profile 更新、适配记录 | 不阻塞主流程 |
-| 13 | COMMIT | final_output | commit_record | 回退 DELIVER |
+| 11 | BRAND | deliverable | 已落位标识 + 品牌块（BR-1..BR-5） | 回退 INTEGRATE |
+| 12 | DELIVER | deliverable | final_output、交付确认 | 回退 BRAND |
+| 13 | LEARN | 全轮数据、用户反馈 | profile 更新、适配记录 | 不阻塞主流程 |
+| 14 | COMMIT | final_output | commit_record | 回退 DELIVER |
 
-常规输出格式：
+品牌链路口径：EXECUTE 产出的 artifact 正文须已含品牌块（步 9 G9 的 C-006/C-007 判定）；
+BRAND（步 11）落位标识并复制为 `brand-logo.png`；DELIVER（步 12）以 `--body-file` 实测，
+品牌未落地则拒绝交付。
+
+常规输出格式（首行品牌块不可省略，BR-1）：
 
 ```
+弈策集团（Yestest Holdings Limited） · cognitivecomputing-firm
 YESTEST // RUN-ID // PHASE // GATE
 结论：
 依据：

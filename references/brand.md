@@ -75,11 +75,44 @@
 | LG-3 | 亮色主题下置于浅底色，暗色主题下置于深底色；透明底不改变色值 |
 | LG-4 | 最小安全边距为标识边长的 1/8；不得拉伸、旋转或变色 |
 | LG-5 | 与表达约束 E-9 一致：标识本身不承载任何暗示生成的字样 |
-| LG-6 | 标识在多处登记一致（见第 6 节覆盖清单），任一登记与文件不一致即视为 G9 交付门失败 |
+| LG-6 | 标识在包内多处登记一致（见 6.1 节），任一登记与文件不一致即视为 G9 交付门失败 |
+| LG-7 | **运行期必须落地**：每个对外交付物与每轮常规输出都必须带品牌块（标识 + 公司名称）。由 `ccf_brand.py` 生成、由 G9 的 C-006/C-007 判定，缺失即门禁失败，不得交付 |
+| LG-8 | 交付物内引用标识统一使用 ASCII 名 `brand-logo.png`（由 `ccf_brand.py block --out-dir` 复制生成）；包内 Markdown 展示仍用中文名 `透明底无字logo.png`。二者同源同哈希，见 BR-6 |
+
+## 5.1 运行期品牌落地规则（BR-1..BR-6）
+
+**背景**：品牌此前只存在于本文件（BOOTSTRAP 阶段惰性加载）与若干被动字段中，
+运行期既无强制步骤、也无门禁可判定，导致交付物经常遗漏标识与公司名称。
+BR 规则把品牌从"文档里的规范"提升为"执行链里的步骤"。
+
+| 编号 | 规则 | 落地手段 | 违背后果 |
+| --- | --- | --- | --- |
+| BR-1 | 每个对外交付物与每轮常规输出都必须带品牌块（标识 + 公司名称） | SKILL.md 顶部强制条款 + TURN 步 11 BRAND | G9 C-006/C-007 失败，`re_execute` |
+| BR-2 | 交付物正文必须含标识引用 | `ccf_brand.py block --out-dir` 复制标识并给出引用 | G9 C-006 失败 |
+| BR-3 | 交付物正文必须标注公司名称 `弈策集团` 或 `Yestest Holdings Limited` | `ccf_brand.py block` 输出的品牌块含名称 | G9 C-007 失败 |
+| BR-4 | 品牌状态必须可判定，不得自报，也不得依赖常量 | `ccf_brand.py check` 扫描正文；`ccf_deliver.py` 记录实测结果 | `brand.applied` 恒为 false |
+| BR-5 | `code` / `data` / `other` 类型只要求名称标注，不强制图片标识 | `ccf_brand.NAME_ONLY_TYPES`；可用 `brand.require_logo: false` 覆盖 | 误判为缺标识 |
+| BR-6 | 交付物内引用名 `brand-logo.png` 与包内 `透明底无字logo.png` 必须同哈希 | `ccf_brand.py logo` 输出 SHA-256 | 视为标识被篡改 |
+
+命令速查：
+
+```bash
+# 生成品牌块并把标识复制为 ASCII 名（放进交付物目录）
+python scripts/ccf_brand.py block --format md --out-dir <交付物目录>
+
+# 校验交付物是否真的带品牌（G9 同款判定）
+python scripts/ccf_brand.py check --input-file <交付物> --artifact-type document
+
+# 校验标识文件本身（尺寸、透明通道、哈希）
+python scripts/ccf_brand.py logo
+```
 
 ## 6. 标识覆盖清单（logo multi-coverage manifest）
 
-标识必须在以下位置登记，且路径一致（均为 `透明底无字logo.png`）：
+### 6.1 包内静态覆盖（11 处）
+
+标识必须在以下位置登记，且路径一致（均为 `透明底无字logo.png`）。此表描述的是
+**技能包自身**的一次性覆盖，由发布前检查保证。
 
 | # | 位置 | 形式 |
 | --- | --- | --- |
@@ -94,6 +127,33 @@
 | 9 | `assets/delivery.template.yaml` → `brand_logo` | 字段登记 |
 | 10 | `assets/gate-report.template.yaml` → `brand_logo` | 字段登记 |
 | 11 | `CHANGELOG.md` 品牌条目 | 路径引用 |
+
+### 6.2 运行期交付物覆盖（每轮，BR-1..BR-5）
+
+6.1 只保证"技能包自己带标识"，**不保证"技能产出的东西带标识"**。后者由此表保证，
+并由门禁强制。二者此前完全脱节，是"经常遗忘"的结构性原因。
+
+| # | 交付物位置 | 形式 | 检查方式 |
+| --- | --- | --- | --- |
+| 1 | 文档封面 / 页眉 | 标识图片 + 公司名称 | `ccf_brand.py check` |
+| 2 | 结项报告 | 标识图片 + 公司名称 | 同上 |
+| 3 | H 点简报（H1–H4） | 标识图片 + 公司名称 | 同上 |
+| 4 | 审计包 / 归档包 | 标识图片 + 公司名称 | 同上 |
+| 5 | 门禁报告（gate-report） | 公司名称 + `brand_checked` 标记 | `gate_runner` 写入 |
+| 6 | 激活请求 / 激活确认 | 公司名称 | 对话输出首行 |
+| 7 | 每轮常规输出 | 名称标注（首行品牌块） | 对话输出首行 |
+| 8 | 交付记录（delivery） | `brand.logo_ref` + `applied`（实测值） | `ccf_deliver.py` 写入 |
+| 9 | code / data 类交付物 | 名称标注（文件头注释） | `--artifact-type code` |
+
+**执行顺序与责任划分**：
+
+1. EXECUTE（步 7）产出的 artifact 正文**必须已含品牌块** —— 这是 G9 在步 9 检查的对象。
+2. BRAND（步 11，INTEGRATE 之后）：`ccf_brand.py block --out-dir <交付物目录>` 把标识
+   复制为 `brand-logo.png` 并给出可直接粘贴的品牌块。
+3. DELIVER（步 12）：`ccf_deliver.py --body-file <交付物> --logo-ref brand-logo.png`，
+   对正文做实测校验；`brand_check.passed=false` 时**交付被拒绝**（退出码非零）。
+
+任一行未覆盖即为交付失败，工单按 `re_execute` 回退。
 
 ## 7. 与其他文件的关系
 
